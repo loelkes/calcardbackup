@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="0.9.6-2 (16.01.2020), AGPL-3.0"
+version="0.9.6-3 (16.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -713,7 +713,7 @@ read_status_php() {
       [[ "${status_php}" =~ ${regex} ]] || error_exit "ERROR: ${nextcloud_url}/status.php does not contain \"installed\":\"true\"!" "You need to check your Installation!"
 
       # check for maintenance=false for versions >= 8.0 in status.php and exit if ownCloud/Nextcloud in maintenance mode:
-      if [[ "$mainversion" -ge 8 ]]; then
+      if [[ "${mainversion}" -ge 8 ]]; then
         regex='"maintenance":"?true"?'
         if [[ "${status_php}" =~ ${regex} ]]; then
           [[ -z "${config_file:-}" ]] && error_exit "ERROR: Installation is in maintenance mode!" "Disable maintenance mode with command \"sudo -u www-data php ${nextcloud_path}/occ maintenance:mode --off\" and run script again" "Another possibility is to not use option '-g|--get-via-http'."
@@ -763,7 +763,7 @@ detect_vendor() {
     regex="([Nn]extcloud|own[Cc]loud)"
     line=""
     while read -r line; do
-      [[ "${line}" =~ $regex ]] && break
+      [[ "${line}" =~ ${regex} ]] && break
       line=""
     done <<<"$(curl -s ${trust} "${nextcloud_url}/core/doc/user/index.html")"
 
@@ -1194,34 +1194,34 @@ include_shares() {
   for (( i=0; i<${#id[@]}; i++ )); do                    # go through calender/addressbook-ids
     for (( s=0; s<${#share_resourceid[@]}; s++ )); do    # go through share_resourceid
       # if share_resourceid matches calendar/addressbook-id, we need to add it to the temporary 'shares to be backed up'-arrays:
-      if [[ "${share_resourceid[$s]}" == "${id[$i]}" && "${share_type[$s]}" == "${item}" ]]; then
+      if [[ "${share_resourceid[${s}]}" == "${id[${i}]}" && "${share_type[${s}]}" == "${item}" ]]; then
         # make sure, principal of share is not a group (group will be treated below)
         # first expression in next line is for ownCloud/Nextcloud >= 9.0, the second one (after &&) is for ownCloud < 9.0:
-        if [[ ! "${share_principal[$s]}" =~ groups/ && ! "${share_type_group[$s]:-}" =~ ^1$ ]]; then
+        if [[ ! "${share_principal[${s}]}" =~ groups/ && ! "${share_type_group[${s}]:-}" =~ ^1$ ]]; then
           # add identified dav-share (shared with a user!) to the temporary 'shares to be backed up'-arrays:
-          temp_principal+=("${share_principal[$s]}")
-          temp_uri+=("${uri[$i]}_shared_by_${principal[$i]}")
-          temp_displayname+=("${displayname[$i]}_shared_by_${principal[$i]}")
-          temp_id+=("${share_resourceid[$s]}")
+          temp_principal+=("${share_principal[${s}]}")
+          temp_uri+=("${uri[${i}]}_shared_by_${principal[${i}]}")
+          temp_displayname+=("${displayname[${i}]}_shared_by_${principal[${i}]}")
+          temp_id+=("${share_resourceid[${s}]}")
           # in case it is a calendar - also add calendarcolor of original item to temp array with shared items:
-          [[ "${item}" == "calendar" && "${fetch_from_database}" == "yes" ]] && temp_calendarcolor+=("${calendarcolor[$i]}")
+          [[ "${item}" == "calendar" && "${fetch_from_database}" == "yes" ]] && temp_calendarcolor+=("${calendarcolor[${i}]}")
         else
           # if share-principal is a group:
           #     go through list with groups and their users and
           #     add item to the temporary 'shares to be backed up'-arrays for all users of that very group:
           for g in "${!grouplist[@]}"; do
-            if [[ "${share_principal[$s]#*groups/}" == "${grouplist[$g]%|*}" ]]; then
+            if [[ "${share_principal[${s}]#*groups/}" == "${grouplist[${g}]%|*}" ]]; then
               # if item owner is member of group:
               #     do not add item to 'shares to be backed up'-arrays for owner, instead continue with next element
               #     (owner is excluded here, because owners item will be downloaded anyway: it is already in the array with items to be downloaded):
-              [[ "${grouplist[$g]#*|}" == "${principal[$i]}" ]] && continue
+              [[ "${grouplist[${g}]#*|}" == "${principal[${i}]}" ]] && continue
               # add details of item shared with group to temporary 'shares to be backed up'-arrays:
-              temp_principal+=("${grouplist[$g]#*|}")
-              temp_uri+=("${uri[$i]}_shared_by_${principal[$i]}")
-              temp_displayname+=("${displayname[$i]}_shared_by_${principal[$i]}")
-              temp_id+=("${share_resourceid[$s]}")
+              temp_principal+=("${grouplist[${g}]#*|}")
+              temp_uri+=("${uri[${i}]}_shared_by_${principal[${i}]}")
+              temp_displayname+=("${displayname[${i}]}_shared_by_${principal[${i}]}")
+              temp_id+=("${share_resourceid[${s}]}")
               # in case it is a calendar - also add calendarcolor of original item to temp array with shared items:
-              [[ "${item}" == "calendar" && "${fetch_from_database}" == "yes" ]] && temp_calendarcolor+=("${calendarcolor[$i]}")
+              [[ "${item}" == "calendar" && "${fetch_from_database}" == "yes" ]] && temp_calendarcolor+=("${calendarcolor[${i}]}")
             fi
           done
         fi
@@ -1234,11 +1234,11 @@ include_shares() {
   if [[ -n ${temp_principal:-} ]]; then
     # add values of temporary 'shares to be backed up'-arrays to arrays which will later be used to download the files:
     for (( i=0; i<${#temp_principal[@]}; i++ )); do
-      principal+=("${temp_principal[$i]}")
-      uri+=("${temp_uri[$i]}")
-      displayname+=("${temp_displayname[$i]}")
-      id+=("${temp_id[$i]}")
-      [[ "${item}" == "calendar" && "${fetch_from_database}" == "yes" ]] && calendarcolor+=("${temp_calendarcolor[$i]}")
+      principal+=("${temp_principal[${i}]}")
+      uri+=("${temp_uri[${i}]}")
+      displayname+=("${temp_displayname[${i}]}")
+      id+=("${temp_id[${i}]}")
+      [[ "${item}" == "calendar" && "${fetch_from_database}" == "yes" ]] && calendarcolor+=("${temp_calendarcolor[${i}]}")
     done
   fi
 
@@ -1288,10 +1288,10 @@ get_icsvcf_files() {
     if [[ "${complete_backup_from_database:-}" == "yes" ]]; then
       # exclude birthday calendar (contact_birthdays), because it is an automatically created calendar from ownCloud/Nextcloud
       # and also exclude system-addressbook (system addressbook can't be restored, when backed up with calcardbackup!):
-      if [[ "${uri[$i]}" != "contact_birthdays" && "${principal[$i]}" != "system/system"  ]]; then
+      if [[ "${uri[${i}]}" != "contact_birthdays" && "${principal[${i}]}" != "system/system"  ]]; then
 
         # create filename like: username-(calendar-/addressbook-)name.(ics|vcf):
-        filename="${principal[$i]}-${displayname[$i]}${item_extension}"
+        filename="${principal[${i}]}-${displayname[${i}]}${item_extension}"
         # remove funky characters from filename:
         filename="${filename//[\/\\*? ]/_}"
 
@@ -1317,26 +1317,26 @@ get_icsvcf_files() {
     for index in "${!user[@]}"; do
       # compare prinicpal with username. If there is a match, we found an item to be downloaded
       # (exclude birthday calendar (contact_birthdays), because it is an automatically created calendar from ownCloud/Nextcloud):
-      if [[ "${principal[$i]}" == "${user[$index]}" && "${uri[$i]}" != "contact_birthdays" ]]; then
+      if [[ "${principal[${i}]}" == "${user[${index}]}" && "${uri[${i}]}" != "contact_birthdays" ]]; then
 
         # create filename like: username-(calendar-/addressbook-)name.(ics|vcf):
-        filename="${principal[$i]}-${displayname[$i]}${item_extension}"
+        filename="${principal[${i}]}-${displayname[${i}]}${item_extension}"
         # remove funky characters from filename:
         filename="${filename//[\/\\*? ]/_}"
 
         # only if shared items shall be included: check if item was already downloaded and break if yes or mark as downloaded:
         if [[ "${include_shares}" == "yes" ]]; then
           # increase readability: id of current item is used as index ($z) for array already_saved_as which stores filenames of downloaded items:
-          z=${id[$i]}
+          z=${id[${i}]}
           # check if there is already an entry for that item, meaning that it was already downloaded:
-          if [[ "${already_saved_as[$z]:-}" != "" ]]; then
+          if [[ "${already_saved_as[${z}]:-}" != "" ]]; then
             # create name of item for message (use $filename without (.ics/.vcf):
             item_name="${filename%.*}"
             # print message that item is already downloaded and break the for-loop going through usernames to continue with next addressbook/calendar:
-            _output printf '%s\n' "+  Skipping ${item} '${item_name}': already saved as '${already_saved_as[$z]}'." && break
+            _output printf '%s\n' "+  Skipping ${item} '${item_name}': already saved as '${already_saved_as[${z}]}'." && break
           fi
           # item has not yet been downloaded, but it will be downloaded, so let's add it to the arraay $already_saved_as:
-          already_saved_as[$z]="${filename}"
+          already_saved_as[${z}]="${filename}"
         fi
 
         if [[ "${fetch_from_database}" == "yes" ]]; then
@@ -1352,7 +1352,7 @@ get_icsvcf_files() {
           _output printf '%s' "+  Saving ${item} ${filename}..."
           # replace spaces in username or addressbook(/calendar)name with %20 (url encoding, to work more reliable with webserver)
           # (OR (in case curl exits with error): store exit code of curl to be able to react on error in separate function):
-          curl -s ${trust} -o "${backupfolder_day}/${filename}" -u "${user[$index]}":"${pass[$index]}" "${nextcloud_url}/remote.php/${calcarddav}/${item}s/${ex_users}${user[$index]// /%20}/${uri[$i]// /%20}?export" || cerror=$?
+          curl -s ${trust} -o "${backupfolder_day}/${filename}" -u "${user[${index}]}":"${pass[${index}]}" "${nextcloud_url}/remote.php/${calcarddav}/${item}s/${ex_users}${user[${index}]// /%20}/${uri[${i}]// /%20}?export" || cerror=$?
           # if error code is set, call function to examine curls exit code and print according message to stderr:
           [[ -n "${cerror:-}" ]] && curl_error
 
@@ -1408,15 +1408,15 @@ create_calendar_from_db() {
 
   # prepare database query to collect all events from according calendarid (variable convert is needed for PostgreSQL):
   # shellcheck disable=SC2016
-  db_query='"SELECT ${convert:-calendardata} FROM ${table_calendarobjects} WHERE calendarid=${id[$i]} ${calendartype:-};"'
+  db_query='"SELECT ${convert:-calendardata} FROM ${table_calendarobjects} WHERE calendarid=${id[${i}]} ${calendartype:-};"'
 
   # print generic iCalendar properties (BEGIN, VERSION, PRODID, CALSCALE) (according to RFC5545 each line has to end with CR+LF):
   printf '%s\r\n' "BEGIN:VCALENDAR" "VERSION:2.0" "PRODID:${origin_repository} v${version%% *}" "CALSCALE:GREGORIAN" > "${backupfolder_day}/${filename}"
 
   # also calendarname and calendarcolor (if existent in database):
-  printf '%s\r\n' "X-WR-CALNAME:${displayname[$i]}" >> "${backupfolder_day}/${filename}"
-  if [[ "${calendarcolor[$i]}" != "NULL" ]]; then
-    printf '%s\r\n' "X-APPLE-CALENDAR-COLOR:${calendarcolor[$i]}" >> "${backupfolder_day}/${filename}"
+  printf '%s\r\n' "X-WR-CALNAME:${displayname[${i}]}" >> "${backupfolder_day}/${filename}"
+  if [[ "${calendarcolor[${i}]}" != "NULL" ]]; then
+    printf '%s\r\n' "X-APPLE-CALENDAR-COLOR:${calendarcolor[${i}]}" >> "${backupfolder_day}/${filename}"
   fi
 
   # property names and property parameters are case insensitive, so let's switch to nocasematch for comparing strings:
@@ -1566,7 +1566,7 @@ create_calendarsubscription_files() {
       # loop through array with usernames given in file with users credentials (users.txt):
       for index in "${!user[@]}"; do
         # compare prinicpal with username. If there is a match --> assign variable:
-        [[ "${principal[$i]}" == "${user[$index]}" ]] && match="yes"
+        [[ "${principal[${i}]}" == "${user[${index}]}" ]] && match="yes"
         [[ -n "${match:-}" ]] && break
       done
 
@@ -1574,13 +1574,13 @@ create_calendarsubscription_files() {
 
     if [[ -n "${match:-}" || "${complete_backup_from_database:-}" == "yes" ]]; then
       # create filename like: username-(calendar-/addressbook-)name.webcal:
-      filename="${principal[$i]}-${displayname[$i]}.webcal"
+      filename="${principal[${i}]}-${displayname[${i}]}.webcal"
       # remove funky characters from filename:
       filename="${filename//[\/\\*? ]/_}"
 
       # create file with URL to subscribed calendar:
       _output printf '%s' "+  Saving ${item} ${filename}..."
-      printf '%s\r\n' "${source_url[$i]}" > "${backupfolder_day}/${filename}"
+      printf '%s\r\n' "${source_url[${i}]}" > "${backupfolder_day}/${filename}"
       _output printf '%s\n' "...success!"
       # increase counter $exported:
       exported=$((exported + 1))
@@ -1600,7 +1600,7 @@ create_addressbook_from_db() {
 
   # prepare database query to collect all cards belonging to addressbookid (variable convert is needed for PostgreSQL):
   # shellcheck disable=SC2016
-  db_query='"SELECT ${convert:-carddata} FROM ${table_cards} WHERE addressbookid=${id[$i]};"'
+  db_query='"SELECT ${convert:-carddata} FROM ${table_cards} WHERE addressbookid=${id[${i}]};"'
 
   # this is much less complex than iCalendar: a vCard addressbook is just single vCards stuck together one after the other.
   # so we just need to pipe the output of the column 'carddata' from table [PREFIX]cards with id of the according addressbook
@@ -1617,7 +1617,7 @@ check_for_valid_icsvcf() {
   if [[ "${item}" == "addressbook" && ! -s "${backupfolder_day}/${filename}" ]]; then
     # touch file to create empty file, if it was not created by curl on successful download of empty addressbook (which is the case for curl < 7.42.0)
     touch "${backupfolder_day}/${filename}"
-    _output printf '%s\n' "...empty file. Addressbook '${displayname[$i]}' of user '${principal[$i]}' is empty."
+    _output printf '%s\n' "...empty file. Addressbook '${displayname[${i}]}' of user '${principal[${i}]}' is empty."
     file_received="no" # because we have received an empty file and thus do not need to check whether it is a valid ics-/vcf-file
   fi
 
@@ -1919,7 +1919,7 @@ check_argument() {
 
   # if option was not last on command line, but an option is following instead of an argument:
   # (use || instead of && so that function returns true in any case - corrected in ver. 0.4.2-3)
-  [[ ! "${1}" =~ $options_regex ]] || error_exit "Invalid argument for option '${option}'"
+  [[ ! "${1}" =~ ${options_regex} ]] || error_exit "Invalid argument for option '${option}'"
 }
 
 
