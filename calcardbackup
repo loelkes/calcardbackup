@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="0.9.6-5 (16.01.2020), AGPL-3.0"
+version="0.9.6-6 (16.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -220,8 +220,8 @@ preparations() {
   fi
   # print warning when using deprecated cli option -g|--get-via-http or value fetch_from_database="no" in config file:
   if [[ "${fetch_from_database}" == "no" ]]; then
-    [[ -z "${config_file:-}" ]] && _output printf '%s\n' "-- WARNING: you are using deprecated option '-g|--get-via-http'" "-- WARNING: For security and performance reasons you might want to consider to not use this deprecated option!" "-- WARNING: this option might be removed in a future release of calcardbackup!"
-    [[ -n "${config_file:-}" ]] && _output printf '%s\n' "-- WARNING: you are using deprecated value fetch_from_database=\"no\"" "-- WARNING: For security and performance reasons you might want to consider to use the default: fetch_from_database=\"yes\"" "-- WARNING: the possibility to set this value to \"no\" might be removed in a future release of calcardbackup!"
+    [[ -z "${config_file:-}" ]] && _output printf '%s\n' "-- WARNING: You are using deprecated option '-g|--get-via-http'" "-- WARNING: For security and performance reasons it is not recommended to use this deprecated option!" "-- WARNING: This option might be removed in a future release of calcardbackup!"
+    [[ -n "${config_file:-}" ]] && _output printf '%s\n' "-- WARNING: You are using deprecated value fetch_from_database=\"no\"" "-- WARNING: For security and performance reasons it is recommended to use the default: fetch_from_database=\"yes\"" "-- WARNING: The possibility to set this value to \"no\" might be removed in a future release of calcardbackup!"
   fi
 
   # check for package curl
@@ -480,7 +480,7 @@ read_config_php() {
     # The exact version doesn't matter, because all versions >= 9.0 behave the same regarding calendar+addressbook data
     # (as well as all versions <= 8.2 behave the same regarding calendar+addressbook data)
     # version 9.1.0 has the advantage that calcardbackup then can't find out, whether it is ownCloud/Nextcloud, if curl is not working:
-    _output printf "+  %s\n" "INFO: version information not found in config.php - treating as ownCloud/Nextcloud >= 9.0" "INFO: if you are using ownCloud <= 8.2, you need to give version information in config.php"
+    _output printf '%s\n' "-- INFO: version information not found in config.php - treating as ownCloud/Nextcloud >= 9.0" "-- INFO: if you are using ownCloud <= 8.2, you need to give version information in config.php"
     version_config_php="9.1.0"
   fi
 
@@ -553,18 +553,18 @@ read_config_php() {
     # use given URL but print notice, if $nextcloud_url has been configured to something other than default or overwrite.cli.url:
     # (last conditional expression in if statement above: make sure overwrite.cli.url is present and not empty):
     _output printf '%s\n' "-- NOTICE: Configured URL differs from 'overwrite.cli.url' in config.php:"
-    _output printf '%s\n' "-- '${nextcloud_url_overwrite}/'   ==>   detected in ${configphp}"
-    _output printf '%s' "-- '${nextcloud_url}/'   ==>   "
+    _output printf '%s\n' "--         '${nextcloud_url_overwrite}/'  ==>  detected in ${configphp}"
+    _output printf '%s' "--         '${nextcloud_url}/'  ==>  "
     [[ -z "${config_file:-}" ]] && _output printf '%s\n' "given with option -a|--address"
     [[ -n "${config_file:-}" ]] && _output printf '%s\n' "found in config file ${config_file}"
 
     # test, if given URL is in trusted_domains array in config.php:
     if [[ "$(is_trusted_domain "${nextcloud_url}")" == "true" ]]; then
-      _output printf '%s\n' "-- using second one, because found in 'trusted_domains' (config.php)."
+      _output printf '%s\n' "--         ==> using second one, because found in 'trusted_domains' (config.php)."
     else
       nextcloud_url="${nextcloud_url#*//}"
       nextcloud_url="${nextcloud_url%%/*}"
-      _output printf '%s\n' "-- using first one, because '${nextcloud_url}' does not belong to 'trusted_domains' (config.php)"
+      _output printf '%s\n' "--         ==> using first one, because '${nextcloud_url}' does not belong to 'trusted_domains' (config.php)"
       # use overwrite.cli.url as URL, because given URL is not a trusted domain:
       nextcloud_url="${nextcloud_url_overwrite}"
     fi
@@ -1596,7 +1596,6 @@ create_calendarsubscription_files() {
 
 create_addressbook_from_db() {
   # create vCard addressbook (.vcf file) by reading cards directly from database (option -f | --fetch-from-database):
-  # according to: https://tools.ietf.org/html/rfc6350
 
   # prepare database query to collect all cards belonging to addressbookid (variable convert is needed for PostgreSQL):
   # shellcheck disable=SC2016
@@ -1616,8 +1615,9 @@ check_for_valid_icsvcf() {
   # check for addressbook and whether no file was received (for curl < 7.42.0) or file received has size of 0 (meaning empty file):
   if [[ "${item}" == "addressbook" && ! -s "${backupfolder_day}/${filename}" ]]; then
     # touch file to create empty file, if it was not created by curl on successful download of empty addressbook (which is the case for curl < 7.42.0)
+    # (this is also the case, if empty addressbook was fetched from database):
     touch "${backupfolder_day}/${filename}"
-    _output printf '%s\n' "...empty file. Addressbook '${displayname[${i}]}' of user '${principal[${i}]}' is empty."
+    _output printf '%s\n' "...empty addressbook!"
     file_received="no" # because we have received an empty file and thus do not need to check whether it is a valid ics-/vcf-file
   fi
 
