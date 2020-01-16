@@ -126,6 +126,16 @@ Pfade (DATEI / VERZEICHNIS) sind absolute Pfade oder relative Pfade zum Arbeitsv
 -o | --output VERZEICHNIS
        Benutze VERZEICHNIS, um die Backups zu speichern.
        Fehlt diese Option, wird das Verzeichnis 'backups/' im Skriptverzeichnis erstellt und benutzt.
+-one | --one-file-per-component
+       Speichere jede Kalender-Komponente (z.B. Event) und jede Addressbuch-Komponente in eine einzelne
+       Datei mit Namen USERNAME-(CALENDARNAME|ADDRESSBOOKNAME)_UID.(ics|vcf).
+       In diesem Modus nimmt calcardbackup keine Änderungen an den von der Datenbank erhaltenen Daten
+       vor, außer die Zeilenenden mit CR+LF zu gestalten (wie in RFC5545/RFC6350 vorgeschrieben).
+       Mit Hilfe dieser Option können fehlerhafte Datenbankeinträge untersucht oder
+       Kalender/Addressbücher zu einem Radicale caldav/carddav Server oder zu vdirsyncer migriert
+       werden.
+       ACHTUNG: diese Option wird ignoriert, wenn in Kombination mit der veralteten
+                Option '-g|--get-via-http' benutzt.
 -p | --snap
        Diese Option ist verpflichtend bei nextcloud-snap (https://github.com/nextcloud/nextcloud-snap).
        calcardbackup muss in diesem Fall mit sudo gestartet werden (ausgeführt als root ohne sudo wird

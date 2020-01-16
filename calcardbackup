@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="0.9.6-7 (16.01.2020), AGPL-3.0"
+version="0.9.6-8 (16.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -136,6 +136,7 @@ load_default_values() {
   include_shares="no"
   snap="no"
   fetch_from_database="yes"
+  one_file_per_component="no"
 }
 
 read_config_file() {
@@ -381,6 +382,19 @@ preparations() {
   # make sure nextcloud.mysql-client is available when configured to use nextcloud-snap:
   if [[ "${snap}" == "yes" ]]; then
     command -v nextcloud.mysql-client > /dev/null || error_exit "ERROR: nextcloud-snaps cli-utility 'nextcloud.mysql-client' not found!" "To work with nextcloud-snap this script needs to be invoked  with sudo (even when root)." "If the script has been invoked with sudo: are you sure you are using nextcloud-snap?"
+  fi
+
+  # check $one_file_per_component for valid value (could only be invalid when using config-file):
+  if [[ ! "${one_file_per_component:-}" =~ ^(yes|no)$ ]]; then
+    _output printf '%s\n' "-- NOTICE: Parameter 'one_file_per_component' is not valid (only \"yes\" or \"no\" allowed)."
+    _output printf '%s\n' "-- NOTICE: Using default value instead: one_file_per_component=\"no\""
+    one_file_per_component="no"
+  fi
+  # option -one|--one-file-per-component is only possible when fetching things from database:
+  if [[ "${one_file_per_component:-}" == "yes" && "${fetch_from_database:-}" == "no" ]]; then
+    [[ -z "${config_file:-}" ]] && _output printf '%s\n' "-- NOTICE: ignoring option '-one|--one-file-per-component', because getting files via http(s)!"
+    [[ -n "${config_file:-}" ]] && _output printf '%s\n' "-- NOTICE: ignoring parameter 'one_file_per_component', because getting files via http(s)!"
+    one_file_per_component="no"
   fi
 }
 
@@ -1053,7 +1067,6 @@ query_database() {
 
     # read required fields from table and assign values to arrays:
     while read -r line; do
-
       # if $line doesn't match $regex, continue with next line
       # (increase robustness against faulty displayname entries (displayname is only field that contains user generated input)):
       [[ ! "${line}" =~ ${regex} ]] && continue
@@ -1249,6 +1262,36 @@ include_shares() {
   fi
 }
 
+get_complete_or_one_file_from_db() {
+  # checks for option -one|--one-file-per-component and runs according functions to backup calendars/addressbooks
+
+  case "${one_file_per_component:-no}" in
+
+    no )
+      # backup complete calendars/addressbooks from database (default):
+      _output printf '%s' "+  Saving ${item} ${filename} (from db)..."
+      [[ "${item}" == "calendar" ]] && create_calendar_from_db
+      [[ "${item}" == "addressbook" ]] && create_addressbook_from_db
+      # in case an empty addressbook was found - this function will create an empty vcf file for us:
+      check_for_valid_icsvcf
+    ;;
+
+    yes )
+      # backup only one file per component (option -one|--one-file-per-component):
+      _output printf '%s' "+  Saving ${item} ${filename%.*} (one file per comp.)..."
+      create_one_file_per_component_from_db
+      if [[ "${component_found:-no}" == "yes" ]]; then
+        _output printf '%s\n' "...success!"
+      else
+        _output printf '%s\n' "...empty ${item}!"
+      fi
+      # no need to create empty items or to check for a valid header, as we want
+      # to leave the output of the database as it is with option -one|--one-file-per-component
+    ;;
+
+  esac
+}
+
 get_icsvcf_files() {
   # looks for matches between array with usernames and arrays created by database-queries and then creates/downloads addressbooks/calendars
   # see next lines for description of arguments:
@@ -1295,13 +1338,8 @@ get_icsvcf_files() {
         # remove funky characters from filename:
         filename="${filename//[\/\\*? ]/_}"
 
-        # create addressbook or calendar by reading data directly from database (option -f | --fetch-from-database):
-        _output printf '%s' "+  Saving ${item} ${filename} (from db)..."
-        [[ "${item}" == "calendar" ]] && create_calendar_from_db
-        [[ "${item}" == "addressbook" ]] && create_addressbook_from_db
-
-        # check whether first line of saved file is a valid iCalendar/vCard header:
-        check_for_valid_icsvcf
+        # create addressbook or calendar by reading data directly from database (default, option -f | --fetch-from-database):
+        get_complete_or_one_file_from_db
 
         # increase counter $exported, because at least one item has been downloaded successfully (even if it was an empty addressbook):
         exported=$((exported + 1))
@@ -1341,10 +1379,8 @@ get_icsvcf_files() {
 
         if [[ "${fetch_from_database}" == "yes" ]]; then
 
-          # create addressbook or calendar by reading data directly from database (option -f | --fetch-from-database):
-          _output printf '%s' "+  Saving ${item} ${filename} (from db)..."
-          [[ "${item}" == "calendar" ]] && create_calendar_from_db
-          [[ "${item}" == "addressbook" ]] && create_addressbook_from_db
+          # create addressbook or calendar by reading data directly from database (default, option -f | --fetch-from-database):
+          get_complete_or_one_file_from_db
 
         else
 
@@ -1356,10 +1392,11 @@ get_icsvcf_files() {
           # if error code is set, call function to examine curls exit code and print according message to stderr:
           [[ -n "${cerror:-}" ]] && curl_error
 
-        fi
+          # check whether first line of saved file is a valid iCalendar/vCard header
+          # in case an empty addressbook was found - this function will create an empty vcf file for us:
+          check_for_valid_icsvcf
 
-        # check whether first line of saved file is a valid iCalendar/vCard header:
-        check_for_valid_icsvcf
+        fi
 
         # increase counter $exported, because at least one item has been downloaded successfully (even if it was an empty addressbook):
         exported=$((exported + 1))
@@ -1387,6 +1424,7 @@ unset_user_array() {
 create_calendar_from_db() {
   # create iCalendar (.ics file) by reading calendardata directly from database (option -f | --fetch-from-database):
   # according to: https://tools.ietf.org/html/rfc5545
+  # here: create an iCalendar object from the components stored in the database (default)
 
   local line vtime component ifs_original calendartype
   local -a tz_temp tz_data tz_ids
@@ -1412,7 +1450,6 @@ create_calendar_from_db() {
 
   # print generic iCalendar properties (BEGIN, VERSION, PRODID, CALSCALE) (according to RFC5545 each line has to end with CR+LF):
   printf '%s\r\n' "BEGIN:VCALENDAR" "VERSION:2.0" "PRODID:${origin_repository} v${version%% *}" "CALSCALE:GREGORIAN" > "${backupfolder_day}/${filename}"
-
   # also calendarname and calendarcolor (if existent in database):
   printf '%s\r\n' "X-WR-CALNAME:${displayname[${i}]}" >> "${backupfolder_day}/${filename}"
   if [[ "${calendarcolor[${i}]}" != "NULL" ]]; then
@@ -1548,6 +1585,137 @@ create_calendar_from_db() {
   shopt -u nocasematch
 }
 
+create_one_file_per_component_from_db() {
+  # option -one|--one-file-per-component
+  # Create one file per calendar/addressbook component by reading data directly from the database. This is a direct dump
+  # of the components stored in the database. The data stored in the database will not be modified (except for adding CR+LF
+  # at the end of the lines according to RFC5545/6350). Each backed up file will contain just one component.
+
+  local fields calendartype db_query first_line_regex line component valarm uid
+  unset component_found
+
+  # property names and property parameters are case insensitive, so let's switch to nocasematch for comparing strings:
+  shopt -s nocasematch
+
+  # store IFS (Intenal Field Separator) and set it to the null string (to prevent 'read' from stripping leading and trailing whitespace from the line),
+  # because we need to keep space characters at the beginning of the line!
+  # of course it is much more performant to do this outside of the loop (instead of 'while IFS= read -r line; do' as suggested often):
+  ifs_original="${IFS}"
+  IFS=
+
+  # delete extension (.ics/.vcf) from filename, because we need to add the UID:
+  filename="${filename%.*}"
+
+  # prepare database query:
+  # fields to be read from database table (id is needed, to identify new database row!):
+  [[ "${item}" == "calendar" ]] && fields="id, ${convert:-calendardata}"
+  [[ "${item}" == "addressbook" ]] && fields="id, ${convert:-carddata}"
+
+  # adjust output format of MySQL/MariaDB/PostgreSQL to match output of SQLite3 (field|field|field):
+  [[ "${dbtype}" != "sqlite3" ]] && fields="CONCAT_WS('|', ${fields})"
+
+  case "${item}" in
+
+    calendar )
+      # ignore cached objects of webcal calendars (calendarsubscriptions) for Nextcloud >= 15.0.0
+      # ( Nextcloud >= 15.0.0 caches objects of calendarsubscriptions also in table calendarobjects. calendarids of calendarsubscriptions
+      #   might match calendarids of regular calendars. So we need to check for calendartype=0 of calendarobjects (calendarsubscriptions
+      #   have calendartype=1 for Nextcloud >= 15.0.0) (see https://github.com/nextcloud/server/pull/10059) )
+      if [[ "${productname}" == "Nextcloud" && ${main_version} -ge 15 ]]; then
+        # shellcheck disable=SC2034
+        calendartype="AND calendartype=0"
+      fi
+      # prepare database query to collect all events from according calendarid (variable convert is needed for PostgreSQL):
+      # ATTENTION: variable $db_query will be passed to command "eval" later. So better take care when adding new stuff to $db_query!
+      # shellcheck disable=SC2016
+      db_query='"SELECT ${fields} FROM ${table_calendarobjects} WHERE calendarid=${id[$i]} ${calendartype:-};"'
+    ;;
+
+    addressbook )
+      # prepare database query to collect all cards belonging to addressbookid (variable convert is needed for PostgreSQL):
+      # ATTENTION: variable $db_query will be passed to command "eval" later. So better take care when adding new stuff to $db_query!
+      # shellcheck disable=SC2016
+      db_query='"SELECT ${fields} FROM ${table_cards} WHERE addressbookid=${id[$i]};"'
+    ;;
+
+  esac
+
+  # regex to identify first line of database row (should be: [ID]|BEGIN:VCALENDAR or [ID]|BEGIN:VCARD, but also faulty entries are identified)
+  first_line_regex='^[[:digit:]]+\|.*$'
+
+  while read -r line; do
+
+    # Remove spacing characters from end of line:
+    while [[ "${line}" =~ [[:space:]]$ ]]; do
+      line="${line%[[:space:]]}"
+    done
+
+    # check whether $line contains also "ID|" (this is the only way to find out that a new database row starts):
+    if [[ "${line}" =~ ${first_line_regex} ]]; then
+
+      # a new database row starts here: this should be the first line of a component.
+      # we need to check here for a possibly already from the previous row filled $component array and not at the and
+      # of the loop, because only now we know, that the previous database row was completely read.
+      # if array $component is already filled (this is not the case for the first returned row): write component to backup file:
+      if [[ -n "${component:-}" ]]; then
+        # write array $component to backup file:
+        printf '%s\r\n' "${component[@]}" > "${backupfolder_day}/${filename}_${uid}${item_extension}"
+        # clear array $component and $valarm (in case there was no end-tag) for content of the next database row:
+        unset -v component valarm
+      fi
+
+      # to be sure to not overwrite anything: store ID as $uid, in case there is no UID in the component (which NEVER should be the case!):
+      uid="${line%%|*}"
+      # store $line (without "ID|" in array $component:
+      component+=("${line#*|}")
+
+    else
+
+      # We want to use the UID of the component/card as part of the filename. The only place where all the different ownCloud/Nextcloud
+      # versions store the UID of the component is in the component itself. That is why we need to parse the component for the UID with
+      # the following case statement. Get the UID of the component/card, which will be used as part of the filename:
+      case "${line}" in
+        # we need to check vor VALARM, because some clients also seem to add an UID to VALARMs, which does not seem to be compliant to
+        # RFC5545, but this shall be a copy of what is in the database without manipulation:
+        BEGIN:VALARM )
+          valarm=1
+        ;;
+        END:VALARM )
+          valarm=0
+        ;;
+        UID:* )
+          # store UID only, if it is not a VALARM-UID:
+          [[ ${valarm:-0} -eq 1 ]] || uid="${line#UID:}"
+        ;;
+      esac
+
+      # store $line in component-array:
+      component+=("${line}")
+
+    fi
+
+  done< <(eval "${dbcommand}" "${db_query}")
+
+  # after last returned line from database
+  # we need to write array $component to backup file:
+  if [[ -n "${component:-}" ]]; then
+    # write array $component to backup file:
+    printf '%s\r\n' "${component[@]}" > "${backupfolder_day}/${filename}_${uid}${item_extension}"
+    # set marker, that at least one component for that calendar/addressbook was found
+    component_found="yes"
+  fi
+
+  # NOTE: as with option -one|--one-file-per-componentl we only do want to reflect the components found in the database,
+  #       there is no need to create empty calendars/addressbooks without any components (like to be done when invoked
+  #       without option -o|--one-file-per-component
+
+  # reset IFS to its original value (was set to null string before to prevent 'read' from stripping leading and trailing whitespace from the line):
+  IFS="${ifs_original}"
+
+  # reset matching case sensitive:
+  shopt -u nocasematch
+}
+
 create_calendarsubscription_files() {
   # creates textfiles with URLs to subscribed calendars
 
@@ -1573,6 +1741,7 @@ create_calendarsubscription_files() {
     fi
 
     if [[ -n "${match:-}" || "${complete_backup_from_database:-}" == "yes" ]]; then
+
       # create filename like: username-(calendar-/addressbook-)name.webcal:
       filename="${principal[${i}]}-${displayname[${i}]}.webcal"
       # remove funky characters from filename:
@@ -1609,6 +1778,7 @@ create_addressbook_from_db() {
 
 check_for_valid_icsvcf() {
   # checks whether saved file has a valid iCalendar/vCard header (checking first line should be enough for our purpose)
+  # (this function is only executed, if option one-file-per-component is set to "no")
 
   # an empty addressbook results in an empty file (or no file for curl < 7.42.0), so we need to check whether we received a file that is not empty:
   file_received="yes" # let's say for now that a file has been downloaded and change it below if no addressbook has been exported.
@@ -1951,7 +2121,7 @@ load_default_values
 [[ ${#} -eq 0 || ( ${#} -eq 1 && "${1}" =~ ^(-b|--batch)$ ) ]] && config_file="${script_dir}/calcardbackup.conf"
 
 # regex matching all available options:
-options_regex='^-(([a-i]|ltm|n(a|c)|o|p|r|s|u|x|z)|-(address|batch|configfile|date|encrypt|fetch-from-database|get-via-http|help|include-shares|like-time-machine|no-(addressbooks|calendars)|output|snap|remove|selfsigned|usersfile|uncompressed|zip))$'
+options_regex='^-(([a-i]|ltm|n(a|c)|o(ne)?|p|r|s|u|x|z)|-(address|batch|configfile|date|encrypt|fetch-from-database|get-via-http|help|include-shares|like-time-machine|no-(addressbooks|calendars)|output|one-file-per-component|snap|remove|selfsigned|usersfile|uncompressed|zip))$'
 
 # check whether first given argument is an available option for this script:
 if [[ ${#} -gt 0 && ! "${1}" =~ ${options_regex} ]]; then
@@ -2028,6 +2198,9 @@ do
       shift
       check_argument "${1:-}"
       backupfolder="${1}"
+    ;;
+    -one | --one-file-per-component )
+      one_file_per_component="yes"
     ;;
     -p | --snap )
       snap="yes"

@@ -161,4 +161,18 @@ include_shares="no"
 snap="no"
 
 
+# save components to separate files
+# If set to "yes", instead of creating complete calendars/addressbooks,
+# calcardbackup will create separate files for every single component/card
+# named: USERNAME-(CALENDARNAME|ADDRESSBOOKNAME)_UID.(ics|vcf).
+# Use this option to investigate faulty database entries or to migrate
+# calendars/addresbooks to a Radicale caldav/carddav server or to vdirsyncer.
+# In this mode, calcardbackup does not modify the data read from the database
+# except for adding CR+LF at the end of lines according to RFC5545/RFC6350.
+# NOTE: this option will be ignored, if option 'fetch_from_database' is set to "no".
+# correlates to option -one|--one-file-per-component
+
+one_file_per_component="no"
+
+
 ########  end of config file for calcardbackup  ########

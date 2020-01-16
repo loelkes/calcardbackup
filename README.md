@@ -123,6 +123,14 @@ Paths (FILE / DIRECTORY) are absolute paths or relative paths to working directo
 -o | --output DIRECTORY
        Use directory DIRECTORY to store backups.
        If this option is not given, folder 'backups/' in script's directory is created and used.
+-one | --one-file-per-component
+       Save each calendar component (e.g. event) and each addressbook component to a separate file
+       named: USERNAME-(CALENDARNAME|ADDRESSBOOKNAME)_UID.(ics|vcf)
+       In this mode, calcardbackup does not modify the data read from the database except for
+       adding CR+LF at the end of the lines according to RFC5545/RFC6350.
+       Use this option to investigate faulty database entries or to migrate calendars/addressbooks
+       to a Radicale caldav/carddav Server or to vdirsyncer.
+       NOTE: this option will be ignored if used together with deprecated option '-g|--get-via-http'
 -p | --snap
        This option is mandatory if you are running nextcloud-snap
        (https://github.com/nextcloud/nextcloud-snap). With this option, calcardbackup has to be
