@@ -1,13 +1,6 @@
-:warning: __Archived, moved to Codeberg: [https://codeberg.org/BernieO/calcardbackup](https://codeberg.org/BernieO/calcardbackup)__
-
-:point_right: This repository on GitHub is outdated.  
-:point_right: Please update your links to point to [the new URL of the repository](https://codeberg.org/BernieO/calcardbackup).
-
----
-
 # calcardbackup
 
-[:de: auf deutsch lesen...](README_GER.md)
+:de: [auf deutsch lesen...](README_GER.md)
 
 This Bash script exports calendars and addressbooks from ownCloud/Nextcloud to .ics and .vcf files and saves them to a compressed file. Additional options are available.
 
@@ -42,7 +35,7 @@ If only calendars/addressbooks of certain users shall be backed up, list them in
 ## Quick Installation Guide
 
 1. Clone the repository to your server (outside of webroot!) and enter the repo:  
-`git clone https://github.com/BernieO/calcardbackup`  
+`git clone https://codeberg.org/BernieO/calcardbackup`  
 `cd calcardbackup`
 
 2. Change the ownership of repo to your webserver's user (here `www-data`):  

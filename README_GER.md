@@ -1,13 +1,6 @@
-:warning: __Archiviert, umgezogen zu Codeberg: [https://codeberg.org/BernieO/calcardbackup](https://codeberg.org/BernieO/calcardbackup)__
-
-:point_right: Dieses Repository auf GitHub ist veraltet.  
-:point_right: Bitte Links aktualisieren, damit sie auf [die neue URL des Repositories](https://codeberg.org/BernieO/calcardbackup) verweisen.
-
----
-
 # calcardbackup
 
-[:gb: read this in english...](README.md)
+:gb: [read this in english...](README.md)
 
 Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud als .ics- und .vcf-Dateien und speichert sie in einem komprimierten Archiv. Weitere Optionen stehen zur Verfügung.
 
@@ -40,7 +33,7 @@ Falls Kalender/Adressbücher nur von ausgewählten Benutzern gesichert werden so
 
 ## Schnellinstallation
 1. das Repository auf Ihren Server klonen (nicht ins webroot!) und ins Verzeichnis wechseln:  
-`git clone https://github.com/BernieO/calcardbackup`  
+`git clone https://codeberg.org/BernieO/calcardbackup`  
 `cd calcardbackup`
 
 2. die Besitzrechte des Repository dem Webserver-User zuweisen (hier `www-data`):  
