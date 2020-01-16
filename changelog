@@ -4,6 +4,7 @@ vX.X.X (XX.XX.XXXX)
 - improved: check for vCards in legacy version 2.1 and print warning if found
 - improved: better coding style of some commands
 - improved: some minor corrections of texts and inline comments
+- improved: updated README.md and README_GER.md
 
 v0.9.6 (07.01.2020)
 - NOTICE: this is the last release hosted on GitHub

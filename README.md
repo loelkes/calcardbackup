@@ -4,23 +4,19 @@
 
 This Bash script exports calendars and addressbooks from ownCloud/Nextcloud to .ics and .vcf files and saves them to a compressed file. Additional options are available.
 
-:warning: Starting with version 0.8.0, there is no need anymore for a file with user credentials because all data is fetched directly from the database.  
-If only calendars/addressbooks of certain users shall be backed up, list them in `users.txt` without any passwords.
-
-:bangbang: __All users upgrading *calcardbackup* from a previous version to version 0.8.0 or above are strongly advised to delete the file with users credentials - or at least to remove the cleartext passwords from this file!__
-
 ## Contents
 - [Requirements](#requirements)
 - [Quick Installation Guide](#quick-installation-guide)
+  - [setup a cronjob for an automatic daily run](#setup-a-cronjob-for-an-automatic-daily-run)
 - [Options](#options)
 - [Usage Examples](#usage-examples)
 - [Nextcloud-Snap Users](#nextcloud-snap-users)
 - [Synology Users](#synology-users)
 - [Considerations about Encryption](#considerations-about-encryption)
-- [Does this also work with a broken instance?](#does-this-also-work-with-a-broken-owncloudnextcloud-instance)
-- [About Option -g|--get-via-http](#about-option--g----get-via-http)
-- [About Option -i|--include-shares](#about-option--i----include-shares)
+- [Does this also work with a broken ownCloud/Nextcloud instance?](#does-this-also-work-with-a-broken-owncloudnextcloud-instance)
+- [Upgrading from *calcardbackup* <= 0.7.2](#upgrading-from-calcardbackup--072)
 - [Links](#links)
+- [About Deprecated Option -g|--get-via-http](#about-deprecated-option--g----get-via-http)
 
 ## Requirements
 
@@ -61,7 +57,7 @@ Once *calcardbackup* runs without errors, a cronjob can be setup to run it autom
 2. edit the cron table of the webserver's user (here `www-data`) with:  
    `sudo crontab -u www-data -e`  
    and add the following line to the end of the file (change paths to fit your setup!):
-   ```
+   ```text
    0 2 * * * /path/to/calcardbackup/calcardbackup "/var/www/nextcloud" > /var/log/calcardbackup.log 2>&1
    ```
 
@@ -74,7 +70,7 @@ All options can be specified in a configuration file or as command line argument
 If no configuration file via option `-c|--configfile` is given, the path to your ownCloud/Nextcloud instance must be the very first argument.  
 Find detailed description of all available options below.
 
-```
+```text
 Usage: ./calcardbackup [DIRECTORY] [option [argument]] [option [argument]] [option [argument]] ...
 
 Arguments in capital letters to options are mandatory.
@@ -146,9 +142,9 @@ Paths (FILE / DIRECTORY) are absolute paths or relative paths to working directo
 -u | --usersfile FILE
        Give location of FILE, which contains users to be backed up. One user per line.
        See 'examples/users.txt.example'
-       Due to option '-f|--fetch-from-database' being the default for calcardbackup >= 0.8.0
-       there is no need anymore to give passwords in this file or to use this file at all.
-       NOTE: this file is mandatory when run with option '-g|--get-via-http'
+       NOTE: this file is mandatory when run with option '-g|--get-via-http'. In this case
+       also passwords of the users to be backed up have to be given in FILE separated by a
+       colon from the username. See 'examples/users.txt.example'
 -x | --uncompressed
        Do not compress backup folder
 -z | --zip
@@ -184,10 +180,6 @@ This example is for [nextcloud-snap](https://github.com/nextcloud/nextcloud-snap
 Keep all backups for the last 30 days, but keep only backups created on mondays for the time before (`-ltm 30`) and remove all backups older than 180 days (`-r 180`).  
 :warning: Make sure backups are also created on mondays when using option `-ltm`
 
-8. `./calcardbackup /var/www/nextcloud -g -u /etc/calcardbackupusers -s -i`  
-Use the deprecated method and get the addressbook/calendar files via https-request from the ownCloud/Nextcloud webinterface (`-g`, deprecated), find usernames and according cleartext passwords of users to be backed up in file /etc/calcardbackupusers (`-u calcardbackupusers`, mandatory with option -g), tell *calcardbackup* that the server is using a selfsigned certificate (`-s`, only needed with option -g) and include shared items (`-i`). The backup will be saved as compressed `*.tar.gz` file named `calcardbackup-YYYY-MM-DD.tar.gz` (default) in folder `./backups/` (default).  
-:warning: Using option `-g` is deprecated and not recommended anymore, due to the mandatory file with user credentials and other drawbacks! It might be removed in a future version of *calcardbackup* (see [About Option -g|--get-via-http](#about-option--g----get-via-http)).
-
 ## Nextcloud-Snap Users
 
 If you are running [Nextcloud-Snap](https://github.com/nextcloud/nextcloud-snap), you have to use option `-p|--snap` to tell *calcardbackup* to use the cli utility `nextcloud.mysql-client` from the snap package.  
@@ -197,7 +189,7 @@ As path to Nextcloud use the path to the configuration files of nextcloud. In a 
 ## Synology Users
 
 In Synology DiskStation Manager (DSM) the path to `mysql` needs to be added to the `PATH` variable before running *calcardbackup*. Example:
-```
+```text
 sudo -u http PATH="$PATH:/usr/local/mariadb10/bin" ./calcardbackup "/volume1/web/nextcloud"
 ```
 
@@ -213,7 +205,7 @@ If you want to use the included encryption possibility, be aware that:
 
 ## Does this also work with a broken ownCloud/Nextcloud instance?
 
-__Yes, it does!__
+__Yes, it does!__ :smiley:
 
 *calcardbackup* only needs the database (and access to it) from an ownCloud/Nextcloud installation to be able to extract calendars/addressbooks from the database and save them as .ics and .vcf files.  
 Here is how this can be accomplished:
@@ -240,30 +232,10 @@ Here is how this can be accomplished:
 3. run *calcardbackup* and give as first argument the path to dummy Nextcloud directory created in step 1:  
 `./calcardbackup /usr/local/bin/nextcloud_dummy`
 
-## About Option -g | -\-get-via-http
+## Upgrading from *calcardbackup* <= 0.7.2
 
-:warning: This option is deprecated and not recommended anymore due to the necessity to give cleartext passwords in a separate file! It might be removed in a future version of *calcardbackup*.
-
-As its default, *calcardbackup* creates calendar and addressbook backups by fetching the according data directly from the database. However, if invoked with option `-g|--get-via-http`, *calcardbackup* is using the legacy method of backing up addressbooks and calendars by downloading the according files from the ownCloud/Nextcloud webinterface. Thus, a file with usernames and passwords is necessary, passed to the script via option `-u|--usersfile`.
-
-Using this option also carries the risk of timeouts resulting in *calcardbackup* not being able to back up large addressbooks.
-
-__To make a long story short__: all you need to know about option `-g|--get-via-http` is to __NOT__ use it, unless you have a good reason to expose passwords of the users to be backed up.
-
-## About Option -i | -\-include-shares
-
-:warning: There is no need to read this section unless you want to run *calcardbackup* with the deprecated option `-g|--get-via-http`, which is not recommended (see [About Option -g|--get-via-http](#about-option--g----get-via-http)).  
-
-If, for whatever reason, *calcardbackup* is being run with option `-g|--get-via-http` (not recommended!), this method may be used as follows to keep passwords of the main users secret:
-- create a new user in your ownCloud/Nextcloud
-- share addressbooks/calendars (to be backed up) with that new user
-- in `users.txt` give only the username and password of this new user
-- add option `-i` to back up shared items as well
-
-__Benefit of this approach:__ if the file `users.txt` gets in wrong hands, only this new user account is being compromised.  
-__Drawback:__ no automatic inclusion of newly created addressbooks/calendars. Items will not be backed up unless being shared with that new user account.  
-
-Due to the new default behaviour of *calcardbackup* >= 0.8.0 (creating calendars/addressbooks by fetching data from the database), this option basically becomes pointless. If you still want to use this method of backing up shared items even without option `-g`, then there is of course no need to give passwords in the usernames file. If no usernames file is passed to the script via option `-u`, option `-i` will be ignored (because all existing calendars/addressbooks will be backed up anyway).
+Starting with version 0.8.0, there is no need anymore for a file with user credentials because all data is fetched directly from the database. If only calendars/addressbooks of certain users shall be backed up, list them in a file `FILE` without any passwords and use option `-u FILE` when running the script.  
+:warning: All users upgrading *calcardbackup* from a version <= 0.7.2 are strongly advised to delete the file with users credentials - or at least to remove the cleartext passwords from this file!
 
 ## Links
 
@@ -286,3 +258,19 @@ Due to the new default behaviour of *calcardbackup* >= 0.8.0 (creating calendars
 #### Exporter Plugins from SabreDAV used by ownCloud/Nextcloud
 - [ICSExportPlugin.php](https://github.com/sabre-io/dav/blob/master/lib/CalDAV/ICSExportPlugin.php) - ICS Exporter `public function mergeObjects`
 - [VCFExportPlugin.php](https://github.com/sabre-io/dav/blob/master/lib/CardDAV/VCFExportPlugin.php) - VCF Exporter `public function generateVCF`
+
+&nbsp;
+
+---
+
+&nbsp;
+
+## About Deprecated Option -g | -\-get-via-http
+
+:warning: This option is deprecated and not recommended anymore due to the necessity to give cleartext passwords in a separate file! It might be removed in a future version of *calcardbackup*.
+
+As its default, *calcardbackup* creates calendar and addressbook backups by fetching the according data directly from the database. However, if invoked with option `-g|--get-via-http`, *calcardbackup* is using the legacy method of backing up addressbooks and calendars by downloading the according files from the ownCloud/Nextcloud webinterface. Thus, a file with usernames and passwords is necessary, passed to the script via option `-u|--usersfile FILE`.
+
+Using this option also carries the risk of timeouts resulting in *calcardbackup* not being able to back up large addressbooks.
+
+__To make a long story short:__ all you need to know about option `-g|--get-via-http` is to __NOT__ use it, unless you have a good reason to expose passwords of the users to be backed up.
