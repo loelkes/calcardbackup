@@ -1,4 +1,4 @@
-vX.X.X (XX.XX.XXXX)
+v1.0.0 (17.01.2020)
 - NOTICE: this is the first release hosted on codeberg.org
 - added: new option -one|--one-file-per-component to backup components to separate files
 - improved: check for vCards in legacy version 2.1 and print warning if found
