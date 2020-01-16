@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="0.9.6-4 (16.01.2020), AGPL-3.0"
+version="0.9.6-5 (16.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -301,7 +301,7 @@ preparations() {
   [[ -w "${backupfolder}" ]] || error_exit "ERROR: can't write files into '${backupfolder}'." "I need to be able to have the according permissions for the directory (+wx). Check given path!"
 
   # make sure the configured date format in $date_extension is valid:
-  if [[ ! "$(date +"${date_extension}" 2>/dev/null)" ]]; then
+  if ! date +"${date_extension}" 1>/dev/null 2>&1; then
     [[ -z "${config_file:-}" ]] && _output printf '%s\n' "-- NOTICE: Argument to option '-d|--date' has no valid format (check 'man date' for valid formats)."
     [[ -n "${config_file:-}" ]] && _output printf '%s\n' "-- NOTICE: Parameter 'date_extension' has no valid format (check 'man date' for valid formats)."
     _output printf '%s\n' "-- NOTICE: Using default value instead: \"-%Y-%m-%d\""
@@ -1751,7 +1751,7 @@ set_mtime_command() {
 
     * ) # Linux|GNU|SunOS and others
        # this is for Linux, GNU Hurd and successors of OpenSolaris (OpenIndiana, SmartOS, OmniOSce)
-      if [[ $(command -v stat) ]]; then
+      if command -v stat; then
         mtime_cmd="stat"
         mtime_pre_options="-c %Y"
       else
