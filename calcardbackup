@@ -30,8 +30,9 @@
 
 set -euo pipefail
 
-# calcardbackup version:
-version="0.9.6-1 (16.01.2020), AGPL-3.0"
+# calcardbackup version and origin repository:
+version="0.9.6-2 (16.01.2020), AGPL-3.0"
+origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
 ### BEGIN: FUNCTION DEFINITIONS
@@ -1410,7 +1411,7 @@ create_calendar_from_db() {
   db_query='"SELECT ${convert:-calendardata} FROM ${table_calendarobjects} WHERE calendarid=${id[$i]} ${calendartype:-};"'
 
   # print generic iCalendar properties (BEGIN, VERSION, PRODID, CALSCALE) (according to RFC5545 each line has to end with CR+LF):
-  printf '%s\r\n' "BEGIN:VCALENDAR" "VERSION:2.0" "PRODID:https://github.com/BernieO/calcardbackup v${version%% *}" "CALSCALE:GREGORIAN" > "${backupfolder_day}/${filename}"
+  printf '%s\r\n' "BEGIN:VCALENDAR" "VERSION:2.0" "PRODID:${origin_repository} v${version%% *}" "CALSCALE:GREGORIAN" > "${backupfolder_day}/${filename}"
 
   # also calendarname and calendarcolor (if existent in database):
   printf '%s\r\n' "X-WR-CALNAME:${displayname[$i]}" >> "${backupfolder_day}/${filename}"
@@ -1904,7 +1905,7 @@ print_help() {
   _output printf '%s\n' "+  Bash script to backup calendars and addressbooks from a local ownCloud/Nextcloud installation."
   _output printf '%s\n' "+"
   _output printf '%s\n' "+  Usage: ./calcardbackup [DIRECTORY] [option [argument]] [option [argument]] [option [argument]] ..."
-  _output printf '%s\n' "+  Find more details in attached file 'README.md' or visit 'https://github.com/BernieO/calcardbackup'"
+  _output printf '%s\n' "+  Find more details in attached file 'README.md' or visit '${origin_repository}'"
   _output printf '%s\n' "+"
   _output printf '%s\n' "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
   _output printf '%s\n'
