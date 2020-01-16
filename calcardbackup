@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="0.9.6-9 (16.01.2020), AGPL-3.0"
+version="0.9.6-10 (16.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -660,6 +660,7 @@ read_status_php() {
   # Nextcloud 15.0.0 {"installed":true,"maintenance":false,"needsDbUpgrade":false,"version":"15.0.0.10","versionstring":"15.0.0","edition":"","productname":"Nextcloud"}
   # Nextcloud 16.0.0 {"installed":true,"maintenance":false,"needsDbUpgrade":false,"version":"16.0.0.9","versionstring":"16.0.0","edition":"","productname":"Nextcloud"}
   # Nextcloud 17.0.0 {"installed":true,"maintenance":false,"needsDbUpgrade":false,"version":"17.0.0.9","versionstring":"17.0.0","edition":"","productname":"Nextcloud","extendedSupport":false}
+  # Nextcloud 18.0.0 {"installed":true,"maintenance":false,"needsDbUpgrade":false,"version":"18.0.0.10","versionstring":"18.0.0","edition":"","productname":"Nextcloud","extendedSupport":false}
 
   # regex matching versions mentioned above (tested with regex101.com):
   # ownCloud 10 changes: version(string) maybe hidden or hostname maybe present (see version.hide, show_server_hostname in config.php)

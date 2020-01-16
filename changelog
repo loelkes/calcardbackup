@@ -5,6 +5,7 @@ vX.X.X (XX.XX.XXXX)
 - improved: better coding style of some commands
 - improved: some minor corrections of texts and inline comments
 - improved: updated README.md and README_GER.md
+- verified: compatible with Nextcloud 18.0
 
 v0.9.6 (07.01.2020)
 - NOTICE: this is the last release hosted on GitHub
