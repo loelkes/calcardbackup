@@ -8,6 +8,7 @@ Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud 
 - [Voraussetzungen](#voraussetzungen)
 - [Schnellinstallation](#schnellinstallation)
   - [automatische, tägliche Ausführung durch Erstellen eines Cronjobs](#automatische-tägliche-ausführung-durch-erstellen-eines-cronjobs)
+  - [*calcardbackup* aktualisieren](#calcardbackup-aktualisieren)
 - [Optionen](#optionen)
 - [Beispiele](#beispiele)
 - [Nextcloud-Snap Benutzer](#nextcloud-snap-benutzer)
@@ -30,7 +31,7 @@ Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud 
 
 ## Schnellinstallation
 1. das Repository auf Ihren Server klonen (nicht ins webroot!) und ins Verzeichnis wechseln:  
-`git clone https://codeberg.org/BernieO/calcardbackup`  
+`git clone https://codeberg.org/BernieO/calcardbackup.git`  
 `cd calcardbackup`
 
 2. die Besitzrechte des Repository dem Webserver-User zuweisen (hier `www-data`):  
@@ -63,6 +64,21 @@ Für den täglichen Aufruf kann folgendermaßen ein Cronjob erstellt werden:
 
 Nun wird Cron *calcardbackup* jeden Tag um 02:00 Uhr morgens aufrufen.  
 Die Skriptausgabe der jeweils letzten Ausführung befindet sich in der Logdatei `/var/log/calcardbackup.log`.
+
+### *calcardbackup* aktualisieren
+
+Wenn *calcardbackup* nach der [Schnellinstallation](#schnellinstallation) eingerichtet wurde, genügt ein `git pull` im Installationsordner, um das Skript zu aktualisieren:
+```text
+cd /path/to/calcardbackup
+sudo -u www-data git pull
+```
+
+Falls die installierte Version noch mit GitHub verknüpft ist, muss einmalig folgender Befehl vor dem `git pull` ausgeführt werden:
+```text
+sudo -u www-data git remote set-url origin "https://codeberg.org/BernieO/calcardbackup.git"
+```
+
+:warning: Falls von einer Version <= 0.7.2 aktualisiert wird, sollte auch die Datei mit den Zugangsdaten gelöscht werden! Siehe [Aktualisieren von *calcardbackup* <= 0.7.2](#aktualisieren-von-calcardbackup--072)
 
 ## Optionen
 Alle Optionen können als Konfigurationsdatei oder über die Kommandozeile übergeben werden. Ohne Optionen, oder nur mit Option `-b|--batch` aufgerufen, benutzt das Skript die Datei `calcardbackup.conf` im Skriptverzeichnis als Konfigurationsdatei, sofern vorhanden.  
