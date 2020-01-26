@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.0.0-1 (26.01.2020), AGPL-3.0"
+version="1.0.0-2 (26.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -1662,10 +1662,8 @@ create_one_file_per_component_from_db() {
 
   while read -r line; do
 
-    # Remove spacing characters from end of line:
-    while [[ "${line}" =~ [[:space:]]$ ]]; do
-      line="${line%[[:space:]]}"
-    done
+    # Remove potentially existing carriage return from end of line:
+    line="${line%[[:space:]]}"
 
     # check whether $line contains also "ID|" (this is the only way to find out that a new database row starts):
     if [[ "${line}" =~ ${first_line_regex} ]]; then
@@ -1694,20 +1692,21 @@ create_one_file_per_component_from_db() {
       case "${line}" in
         # we need to check vor VALARM, because some clients also seem to add an UID to VALARMs, which does not seem to be compliant to
         # RFC5545, but this shall be a copy of what is in the database without manipulation:
-        BEGIN:VALARM )
+        BEGIN:VA* )
           valarm=1
         ;;
-        END:VALARM )
+        END:VA* )
           valarm=0
         ;;
         UID:* )
           # store UID only, if it is not a VALARM-UID:
           [[ ${valarm:-0} -eq 1 ]] || uid="${line#UID:}"
         ;;
+        VERSION:2.1* )
+          # increase counter, if a vCards in version 2.1 is found to be able to print a warning if > 0:
+          vcard_twodotone=$((vcard_twodotone + 1))
+        ;;
       esac
-
-      # increase counter, if a vCards in version 2.1 is found to be able to print a warning if > 0:
-      [[ "${item}" == "addressbook" && "${line}" == "VERSION:2.1" ]] && vcard_twodotone=$((vcard_twodotone + 1))
 
       # store $line in component-array:
       component+=("${line}")
