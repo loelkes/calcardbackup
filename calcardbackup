@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.0.0-2 (26.01.2020), AGPL-3.0"
+version="1.0.0-3 (26.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -1507,16 +1507,16 @@ create_calendar_from_db() {
       0 )
         # looping within an iCalendar component which is not a VTIMEZONE (vtime==0) and that has not ended yet: print line to ics-file and continue with next line:
         [[ ${line} != END:* && -n ${component:-} ]] && {
-          # (replace LF (linefeed) with CRLF (carriage-return + linefeed) according to RFC5545
-          #       with parameter expansion "${line/%[[:space:]]}")
-          printf '%s\r\n' "${line/%[[:space:]]}" >> "${backupfolder_day}/${filename}"
+          # (remove eventually existing CR and add CRLF (carriage-return + linefeed) according to RFC5545
+          #       with parameter expansion "${line%[[:space:]]}")
+          printf '%s\r\n' "${line%[[:space:]]}" >> "${backupfolder_day}/${filename}"
           continue
         }
         ;;
     esac
 
     case "${line}" in
-      BEGIN:VCALENDAR* )
+      BEGIN:VCAL* )
         # we need to filter out BEGIN:VCALENDAR to catch beginnings of components (it's not needed anyway):
         continue
         ;;
@@ -1569,7 +1569,7 @@ create_calendar_from_db() {
       # check for END:VTIMEZONE:
       if [[ ${line} == END:VTI* ]]; then
         # transfer VTIMEZONE from the temporary array to the array containing all collected VTIMEZONE data:
-        tz_data+=("${tz_temp[@]/%[[:space:]]}")
+        tz_data+=("${tz_temp[@]%[[:space:]]}")
         # reset vtime indicator to 0:
         vtime=0
         # unset tz_temp, so there wont be any old data when collecting the next found timezone:
@@ -1581,8 +1581,8 @@ create_calendar_from_db() {
 
     # END VTIMEZONE collect and compare
 
-    # output line:
-    printf '%s\r\n' "${line/%[[:space:]]}" >> "${backupfolder_day}/${filename}"
+    # output line (remove eventually existing CR and add CRLF according to RFC5545):
+    printf '%s\r\n' "${line%[[:space:]]}" >> "${backupfolder_day}/${filename}"
 
   done< <(eval "${dbcommand}" "${db_query}")
 

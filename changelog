@@ -1,5 +1,6 @@
 vX.X.X (XX.XX.XXXX)
--improved: accelerate export of addressbooks
+- improved: accelerate backup of addressbooks and calendars
+- improved: make sure to always delete a CR before adding CRLF at the end of lines
 
 v1.0.0 (17.01.2020)
 - NOTICE: this is the first release hosted on codeberg.org
