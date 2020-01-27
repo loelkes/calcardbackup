@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.0.0-3 (26.01.2020), AGPL-3.0"
+version="1.0.0-4 (27.01.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -1271,11 +1271,6 @@ include_shares() {
 get_complete_or_one_file_from_db() {
   # checks for option -one|--one-file-per-component and runs according functions to backup calendars/addressbooks
 
-  local plural
-
-  # initialize counter for vCards in version 2.1:
-  vcard_twodotone=0
-
   case "${one_file_per_component:-no}" in
 
     no )
@@ -1303,6 +1298,14 @@ get_complete_or_one_file_from_db() {
   esac
 
   # print warning, if vCards in version 2.1 were found:
+  print_vcard21_warning
+}
+
+print_vcard21_warning() {
+  # print warning, if vCards in version 2.1 were found:
+
+  local plural
+
   if [[ "${item}" == "addressbook" && ${vcard_twodotone:-0} -gt 0 ]]; then
     [[ ${vcard_twodotone} -gt 1 ]] && plural="s"
     _output printf '%s\n' "-- WARNING: ${item} ${filename} contains ${vcard_twodotone:-0} vCard${plural:-} 2.1"
@@ -1344,6 +1347,9 @@ get_icsvcf_files() {
 
   # loop through array with addressbooks/calendars:
   for (( i=0; i<${#uri[@]}; i++ )); do
+
+    # initialize counter for vCards in version 2.1:
+    [[ "${item}" == "addressbook" ]] && vcard_twodotone=0
 
     if [[ "${complete_backup_from_database:-}" == "yes" ]]; then
       # exclude birthday calendar (contact_birthdays), because it is an automatically created calendar from ownCloud/Nextcloud
@@ -1412,6 +1418,11 @@ get_icsvcf_files() {
           # check whether first line of saved file is a valid iCalendar/vCard header
           # in case an empty addressbook was found - this function will create an empty vcf file for us:
           check_for_valid_icsvcf
+
+          # check for vcard 2.1 in backed up addressbook:
+          check_for_vcard21 "${backupfolder_day}/${filename}"
+          # print warning, if vCards in version 2.1 were found:
+          print_vcard21_warning
 
         fi
 
