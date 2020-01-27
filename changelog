@@ -1,4 +1,4 @@
-vX.X.X (XX.XX.XXXX)
+v1.1.0 (27.01.2020)
 - added: section about updating calcardbackup (README.md and README_GER.md)
 - improved: accelerate backup of addressbooks and calendars
 - improved: make sure to always delete a CR before adding CRLF at the end of lines
