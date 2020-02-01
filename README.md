@@ -8,14 +8,13 @@ This Bash script exports calendars and addressbooks from ownCloud/Nextcloud to .
 - [Requirements](#requirements)
 - [Quick Installation Guide](#quick-installation-guide)
   - [setup a cronjob for an automatic daily run](#setup-a-cronjob-for-an-automatic-daily-run)
-  - [Upgrading *calcardbackup*](#upgrading-calcardbackup)
+- [Upgrading *calcardbackup*](#upgrading-calcardbackup)
 - [Options](#options)
 - [Usage Examples](#usage-examples)
 - [Nextcloud-Snap Users](#nextcloud-snap-users)
 - [Synology Users](#synology-users)
 - [Considerations about Encryption](#considerations-about-encryption)
 - [Does this also work with a broken ownCloud/Nextcloud instance?](#does-this-also-work-with-a-broken-owncloudnextcloud-instance)
-- [Upgrading from *calcardbackup* <= 0.7.2](#upgrading-from-calcardbackup--072)
 - [Links](#links)
 - [About Deprecated Option -g|--get-via-http](#about-deprecated-option--g----get-via-http)
 
@@ -47,7 +46,7 @@ This Bash script exports calendars and addressbooks from ownCloud/Nextcloud to .
 
 There are many more options available: have a look at sections [Options](#options) and [Usage examples](#usage-examples).
 
-### setup a cronjob for an automatic daily run
+#### setup a cronjob for an automatic daily run
 
 Once *calcardbackup* runs without errors, a cronjob can be setup to run it automatically each day as follows:
 
@@ -65,7 +64,7 @@ Once *calcardbackup* runs without errors, a cronjob can be setup to run it autom
 Cron will now execute *calcardbackup* each day at 02:00am.  
 The output of the last run is written to `/var/log/calcardbackup.log`.
 
-### Upgrading *calcardbackup*
+## Upgrading *calcardbackup*
 
 If you followed the instructions in the [Quick Installation Guide](#quick-installation-guide), you just need to pull the new version to upgrade to the latest version:
 ```text
@@ -73,12 +72,12 @@ cd /path/to/calcardbackup
 sudo -u www-data git pull
 ```
 
-When migrating from GitHub to Codeberg, you need to execute the following command before pulling the new version:
+When migrating from GitHub to Codeberg, you need to execute the following command once before pulling the new version:
 ```text
 sudo -u www-data git remote set-url origin "https://codeberg.org/BernieO/calcardbackup.git"
 ```
 
-:warning: If you are upgrading from *calcardbackup* <= 0.7.2, you should also delete the file with users credentials! [More information...](#upgrading-from-calcardbackup--072)
+:warning: __IMPORTANT:__ users upgrading *calcardbackup* from a version <= 0.7.2 are strongly advised to delete the file with users credentials (it is not needed anymore)!
 
 ## Options
 
@@ -247,11 +246,6 @@ Here is how this can be accomplished:
 
 3. run *calcardbackup* and give as first argument the path to dummy Nextcloud directory created in step 1:  
 `./calcardbackup /usr/local/bin/nextcloud_dummy`
-
-## Upgrading from *calcardbackup* <= 0.7.2
-
-Starting with version 0.8.0, there is no need anymore for a file with user credentials because all data is fetched directly from the database. If only calendars/addressbooks of certain users shall be backed up, list them in a file `FILE` without any passwords and use option `-u FILE` when running the script.  
-:warning: All users upgrading *calcardbackup* from a version <= 0.7.2 are strongly advised to delete the file with users credentials - or at least to remove the cleartext passwords from this file!
 
 ## Links
 

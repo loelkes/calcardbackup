@@ -1,3 +1,6 @@
+vX.X.X (XX.XX.XXXX)
+- improved: minor modifications in README.md and README_GER.md
+
 v1.1.0 (27.01.2020)
 - added: section about updating calcardbackup (README.md and README_GER.md)
 - improved: accelerate backup of addressbooks and calendars

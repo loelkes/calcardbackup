@@ -8,14 +8,13 @@ Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud 
 - [Voraussetzungen](#voraussetzungen)
 - [Schnellinstallation](#schnellinstallation)
   - [automatische, tägliche Ausführung durch Erstellen eines Cronjobs](#automatische-tägliche-ausführung-durch-erstellen-eines-cronjobs)
-  - [*calcardbackup* aktualisieren](#calcardbackup-aktualisieren)
+- [*calcardbackup* aktualisieren](#calcardbackup-aktualisieren)
 - [Optionen](#optionen)
 - [Beispiele](#beispiele)
 - [Nextcloud-Snap Benutzer](#nextcloud-snap-benutzer)
 - [Synology Benutzer](#synology-benutzer)
 - [Erwähnenswertes zur Verschlüsselungsoption](#erwähnenswertes-zur-verschlüsselungsoption)
 - [Funktioniert das auch mit einer nicht funktionierenden ownCloud/Nextcloud Installation?](#funktioniert-das-auch-mit-einer-nicht-funktionierenden-owncloudnextcloud-installation)
-- [Aktualisieren von *calcardbackup* <= 0.7.2](#aktualisieren-von-calcardbackup--072)
 - [Links](#links)
 - [Über die veraltete Option -g|--get-via-http](#über-die-veraltete-option--g----get-via-http)
 
@@ -46,7 +45,7 @@ Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud 
 
 Es gibt viele weitere Optionen, die dem Skript übergeben werden können (siehe [Optionen](#optionen) und [Beispiele](#beispiele)).
 
-### automatische, tägliche Ausführung durch Erstellen eines Cronjobs
+#### automatische, tägliche Ausführung durch Erstellen eines Cronjobs
 
 Wenn das Skript fehlerfrei läuft, empfiehlt es sich, die Ausführung zu automatisieren.  
 Für den täglichen Aufruf kann folgendermaßen ein Cronjob erstellt werden:
@@ -65,7 +64,7 @@ Für den täglichen Aufruf kann folgendermaßen ein Cronjob erstellt werden:
 Nun wird Cron *calcardbackup* jeden Tag um 02:00 Uhr morgens aufrufen.  
 Die Skriptausgabe der jeweils letzten Ausführung befindet sich in der Logdatei `/var/log/calcardbackup.log`.
 
-### *calcardbackup* aktualisieren
+## *calcardbackup* aktualisieren
 
 Wenn *calcardbackup* nach der [Schnellinstallation](#schnellinstallation) eingerichtet wurde, genügt ein `git pull` im Installationsordner, um das Skript zu aktualisieren:
 ```text
@@ -73,12 +72,12 @@ cd /path/to/calcardbackup
 sudo -u www-data git pull
 ```
 
-Falls die installierte Version noch mit GitHub verknüpft ist, muss einmalig folgender Befehl vor dem `git pull` ausgeführt werden:
+Falls die installierte Version noch mit GitHub verknüpft ist, muss einmalig folgender Befehl vor `git pull` ausgeführt werden:
 ```text
 sudo -u www-data git remote set-url origin "https://codeberg.org/BernieO/calcardbackup.git"
 ```
 
-:warning: Falls von einer Version <= 0.7.2 aktualisiert wird, sollte auch die Datei mit den Zugangsdaten gelöscht werden! Siehe [Aktualisieren von *calcardbackup* <= 0.7.2](#aktualisieren-von-calcardbackup--072)
+:warning: __WICHTIG:__ falls von einer Version <= 0.7.2 aktualisiert wird, sollte auch die Datei mit den Zugangsdaten gelöscht werden (sie wird nicht mehr benötigt)!
 
 ## Optionen
 Alle Optionen können als Konfigurationsdatei oder über die Kommandozeile übergeben werden. Ohne Optionen, oder nur mit Option `-b|--batch` aufgerufen, benutzt das Skript die Datei `calcardbackup.conf` im Skriptverzeichnis als Konfigurationsdatei, sofern vorhanden.  
@@ -252,11 +251,6 @@ Gehen Sie folgendermaßen vor:
 
 3. *calcardbackup* ausführen und als erstes Argument den Pfad zu der in Schritt 1 angelegten Nextcloud Verzeichnisattrappe angeben:  
 `./calcardbackup /usr/local/bin/nextcloud_dummy`
-
-## Aktualisieren von *calcardbackup* <= 0.7.2
-
-Ab *calcardbackup* Version 0.8.0 ist eine Datei mit Benutzernamen und Passwörtern nicht mehr notwendig, da alle benötigten Daten direkt aus der Datenbank gezogen werden. Falls Kalender/Adressbücher nur von ausgewählten Benutzern gesichert werden sollen, können diese ohne Passwörter in `DATEI` gelistet werden (beim Aufruf muss dann die Option `-u DATEI` benutzt werden).  
-:warning: Allen, die *calcardbackup* von einer Version <= 0.7.2 aktualisieren, wird nachdrücklich empfohlen, die Datei mit den Passwörtern zu löschen, oder zumindest die Passwörter daraus zu entfernen.
 
 ## Links
 
