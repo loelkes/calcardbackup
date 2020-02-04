@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.1.0 (27.01.2020), AGPL-3.0"
+version="1.1.0-1 (04.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -1533,7 +1533,8 @@ create_calendar_from_db() {
         ;;
       BEGIN:* )
         # something is beginning here!
-        # it might be an alarm-component which resides inside an VEVENT or VTODO component
+        # it might be an alarm-component which resides inside an VEVENT or VTODO component (see RFC 5545, 3.6.6)
+        # or an AVAILABLE-component, which resides within an VAVAILABILITY component (see RFC 7953, 3.1)
         # if $component is unset: an iCalendar component begins with this line, so store component name in component variable:
         [[ -z ${component:-} ]] && component="${line#*:}"
         # if this is the beginning of a VTIMEZONE component, set vtime indicator to 1
@@ -1702,11 +1703,12 @@ create_one_file_per_component_from_db() {
       # the following case statement. Get the UID of the component/card, which will be used as part of the filename:
       case "${line}" in
         # we need to check vor VALARM, because some clients also seem to add an UID to VALARMs, which does not seem to be compliant to
-        # RFC5545, but this shall be a copy of what is in the database without manipulation:
-        BEGIN:VA* )
+        # RFC5545. With option -one, we only want to backup a copy of what is in the database without manipulation
+        # (a short form with wild card (VA*) would speed up the processs, but is not possible here because of VAVALABILITY):
+        BEGIN:VALARM )
           valarm=1
         ;;
-        END:VA* )
+        END:VALARM )
           valarm=0
         ;;
         UID:* )
