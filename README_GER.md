@@ -124,8 +124,8 @@ Pfade (DATEI / VERZEICHNIS) sind absolute Pfade oder relative Pfade zum Arbeitsv
 -h | --help
        Gib Versionsnummer und einen kurzen Hilfetext aus
 -i | --include-shares
-       Sichere auch geteilte Adressbücher und Kalender. Elemente werden nur einmal gesichert: z.B. ein
-       geteilter Kalender wird nicht erneut gesichert, wenn derselbe Kalender schon für einen anderen
+       Sichere auch geteilte Adressbücher und Kalender, aber nur einmal: z.B. ein geteilter
+       Kalender wird nicht erneut gesichert, wenn derselbe Kalender schon für einen anderen
        Nutzer gesichert wurde.
        ACHTUNG: diese Option wird ignoriert, wenn nicht in Kombination mit '-u|--usersfile' benutzt.
 -ltm | --like-time-machine N
