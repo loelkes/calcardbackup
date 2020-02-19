@@ -1,4 +1,4 @@
-vX.X.X (XX.XX.XXXX)
+v1.2.0 (20.02.2020)
 - improved: minor modifications in README.md and README_GER.md
 - improved: remove unneeded quoting of lhs in conditional expressions
 - fixed: also backup VAVAILABILITY components when using option -one

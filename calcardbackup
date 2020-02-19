@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.1.0-3 (19.02.2020), AGPL-3.0"
+version="1.2.0 (20.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
