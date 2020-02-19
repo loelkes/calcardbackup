@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.1.0-1 (04.02.2020), AGPL-3.0"
+version="1.1.0-2 (19.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -254,7 +254,7 @@ preparations() {
   # check, if grep is installed on this machine (grep is not a requirement, but speeds up the check, if addressbooks conatin any vCard 2.1)
   # assume grep is installed and change to no, if it is not installed:
   grep_installed="yes"
-  command -v grep > /dev/null 2>&1 || grep_installed="no"
+  command -v grep > /dev/null || grep_installed="no"
 
   # if $users_file is unset or empty and we fetch everything from database - do a complete backup:
   if [[ -z ${users_file:-} ]]; then
@@ -1998,7 +1998,7 @@ set_mtime_command() {
 
     * ) # Linux|GNU|SunOS and others
        # this is for Linux, GNU Hurd and successors of OpenSolaris (OpenIndiana, SmartOS, OmniOSce)
-      if command -v stat; then
+      if command -v stat > /dev/null; then
         mtime_cmd="stat"
         mtime_pre_options="-c %Y"
       else

@@ -1,6 +1,7 @@
 vX.X.X (XX.XX.XXXX)
 - improved: minor modifications in README.md and README_GER.md
 - fixed: when using option -one VAVAILABILITY components did not get backed up
+- fixed: redirect output properly when checking for packages
 
 v1.1.0 (27.01.2020)
 - added: section about updating calcardbackup (README.md and README_GER.md)
