@@ -1,8 +1,8 @@
 vX.X.X (XX.XX.XXXX)
 - improved: minor modifications in README.md and README_GER.md
-- improved: minor code optimizations for improved performance
+- improved: remove unneeded quoting of lhs in conditional expressions
 - fixed: also backup VAVAILABILITY components when using option -one
-- fixed: suppress output when checking for stat
+- fixed: redirect output properly when checking for packages
 
 v1.1.0 (27.01.2020)
 - added: section about updating calcardbackup (README.md and README_GER.md)
