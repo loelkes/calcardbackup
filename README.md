@@ -7,7 +7,6 @@ This Bash script exports calendars and addressbooks from ownCloud/Nextcloud to .
 ## Contents
 - [Requirements](#requirements)
 - [Quick Installation Guide](#quick-installation-guide)
-  - [setup a cronjob for an automatic daily run](#setup-a-cronjob-for-an-automatic-daily-run)
 - [Upgrading *calcardbackup*](#upgrading-calcardbackup)
 - [Options](#options)
 - [Usage Examples](#usage-examples)
@@ -46,7 +45,7 @@ This Bash script exports calendars and addressbooks from ownCloud/Nextcloud to .
 
 There are many more options available: have a look at sections [Options](#options) and [Usage examples](#usage-examples).
 
-#### setup a cronjob for an automatic daily run
+#### optional: setup a cronjob for an automatic daily run
 
 Once *calcardbackup* runs without errors, a cronjob can be setup to run it automatically each day as follows:
 

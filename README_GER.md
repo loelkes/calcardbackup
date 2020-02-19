@@ -7,7 +7,6 @@ Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud 
 ## Inhalt
 - [Voraussetzungen](#voraussetzungen)
 - [Schnellinstallation](#schnellinstallation)
-  - [automatische, tägliche Ausführung durch Erstellen eines Cronjobs](#automatische-tägliche-ausführung-durch-erstellen-eines-cronjobs)
 - [*calcardbackup* aktualisieren](#calcardbackup-aktualisieren)
 - [Optionen](#optionen)
 - [Beispiele](#beispiele)
@@ -45,7 +44,7 @@ Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud 
 
 Es gibt viele weitere Optionen, die dem Skript übergeben werden können (siehe [Optionen](#optionen) und [Beispiele](#beispiele)).
 
-#### automatische, tägliche Ausführung durch Erstellen eines Cronjobs
+#### optional: automatische, tägliche Ausführung durch Erstellen eines Cronjobs
 
 Wenn das Skript fehlerfrei läuft, empfiehlt es sich, die Ausführung zu automatisieren.  
 Für den täglichen Aufruf kann folgendermaßen ein Cronjob erstellt werden:
