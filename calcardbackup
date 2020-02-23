@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-1 (23.02.2020), AGPL-3.0"
+version="1.2.0-2 (23.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -255,6 +255,8 @@ preparations() {
   # assume grep is installed and change to no, if it is not installed:
   grep_installed="yes"
   command -v grep > /dev/null || grep_installed="no"
+  # make sure that grep is accessible (might not be in shared hosting environments):
+  grep -V > /dev/null 2>&1 || grep_installed="no"
 
   # if $users_file is unset or empty and we fetch everything from database - do a complete backup:
   if [[ -z ${users_file:-} ]]; then
