@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0 (20.02.2020), AGPL-3.0"
+version="1.2.0-1 (23.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -372,7 +372,7 @@ preparations() {
   if [[ ${compression_method:-} == "zip" && ${compress} == "yes" ]]; then
     # check for package zip:
     command -v zip > /dev/null || error_exit "ERROR: You chose to compress backed up files with 'zip' instead of 'tar.gz'." "Therefore package 'zip' is needed. Install with 'apt-get install zip' and run script again"
-  elif [[ ${compression_method:-} != "tar.gz" && "${compress}" == "yes" ]]; then
+  elif [[ ${compression_method:-} != "tar.gz" && ${compress} == "yes" ]]; then
     # if $compression_method is set to something else than "zip" or "tar.gz" - use "tar.gz":
     _output printf '%s\n' "-- NOTICE: Parameter 'compression_method' is set to unsupported format. Using default value 'tar.gz'."
     compression_method="tar.gz"
@@ -396,7 +396,7 @@ preparations() {
     one_file_per_component="no"
   fi
   # option -one|--one-file-per-component is only possible when fetching things from database:
-  if [[ ${one_file_per_component:-} == "yes" && "${fetch_from_database:-}" == "no" ]]; then
+  if [[ ${one_file_per_component:-} == "yes" && ${fetch_from_database:-} == "no" ]]; then
     [[ -z ${config_file:-} ]] && _output printf '%s\n' "-- NOTICE: ignoring option '-one|--one-file-per-component', because getting files via http(s)!"
     [[ -n ${config_file:-} ]] && _output printf '%s\n' "-- NOTICE: ignoring parameter 'one_file_per_component', because getting files via http(s)!"
     one_file_per_component="no"
@@ -589,7 +589,7 @@ read_config_php() {
     fi
 
   # nextcloud_url and nextcloud_url_overwrite are both unset:
-  elif [[ ${nextcloud_url} == "${nextcloud_url_default}" && "${nextcloud_url_overwrite}" == "value is unset" ]]; then
+  elif [[ ${nextcloud_url} == "${nextcloud_url_default}" && ${nextcloud_url_overwrite} == "value is unset" ]]; then
     if [[ ${fetch_from_database} == "no" ]]; then
       # we want do download addressbooks/calendars - therefore the URL to ownCloud/Nextcloud server is required.
       # Error, if $nextcloud_url is on default value and config.php contains no overwrite.cli.url (or is empty)
@@ -722,7 +722,7 @@ read_status_php() {
 
       # check whether version of config.php is the same than version of status.php:
       if [[ ${version_status_php} != "${version_config_php}" ]]; then
-        if [[ -n ${version_status_php:-} && -n "${versionstring_status_php:-}" ]]; then
+        if [[ -n ${version_status_php:-} && -n ${versionstring_status_php:-} ]]; then
           [[ -z ${config_file:-} ]] && error_exit "ERROR: different versions detected:" "Version ${versionstring_status_php} found at ${nextcloud_url}" "Version ${version_config_php} found at ${nextcloud_path}" "check given path and given url (option -a)"
           [[ -n ${config_file:-} ]] && error_exit "ERROR: different versions detected:" "Version ${versionstring_status_php} found at ${nextcloud_url}" "Version ${version_config_php} found at ${nextcloud_path}" "check configured path and url in config file '${config_file}'"
         fi
@@ -766,7 +766,7 @@ detect_vendor() {
 
   # only for owncloud 5.0 use versionstring from status.php (if possible), because versionstring uses "official" patch version number
   # (for ownCloud >= 6.0 patch version number is the same in version and versionstring):
-  [[ ${fetch_from_database} == "no" && "${main_version}" == "5" ]] && server_version="${versionstring_status_php}"
+  [[ ${fetch_from_database} == "no" && ${main_version} == "5" ]] && server_version="${versionstring_status_php}"
 
   # there is no Nextcloud < 9.0:
   [[ ${main_version} -lt 9 ]] && productname="ownCloud"
@@ -779,7 +779,7 @@ detect_vendor() {
   fi
 
   # try to detect vendor from user documentation (only if curl is installed):
-  if [[ ${productname} == "Server" && "${curl_installed}" == "yes" ]]; then
+  if [[ ${productname} == "Server" && ${curl_installed} == "yes" ]]; then
     regex='([Nn]extcloud|own[Cc]loud)'
     line=""
     while read -r line; do
@@ -1018,8 +1018,8 @@ query_database() {
 
   # check if table exists:
   # for checking tables with MySQL: option -r is not needed but an additional option -s is used to produce less output:
-  [[ ${dbtype} == "mysql" && "${snap}" == "no" ]] && check_table="$(mysql --defaults-extra-file=<(printf '[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s' "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sse "SHOW TABLES LIKE '${table}';")"
-  [[ ${dbtype} == "mysql" && "${snap}" == "yes" ]] && check_table="$(nextcloud.mysql-client --defaults-extra-file=<(printf '[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s' "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sse "SHOW TABLES LIKE '${table}';")"
+  [[ ${dbtype} == "mysql" && ${snap} == "no" ]] && check_table="$(mysql --defaults-extra-file=<(printf '[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s' "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sse "SHOW TABLES LIKE '${table}';")"
+  [[ ${dbtype} == "mysql" && ${snap} == "yes" ]] && check_table="$(nextcloud.mysql-client --defaults-extra-file=<(printf '[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s' "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sse "SHOW TABLES LIKE '${table}';")"
   [[ ${dbtype} == "sqlite3" ]] && check_table="$(sqlite3 "${sqlite3_database}" "SELECT name FROM sqlite_master WHERE type='table' AND name='${table}';")"
   # this check is a bit more complicated for PostgreSQL:
   if [[ ${dbtype} == "pgsql" ]]; then
@@ -1856,7 +1856,7 @@ check_for_valid_icsvcf() {
   # an empty addressbook results in an empty file (or no file for curl < 7.42.0), so we need to check whether we received a file that is not empty:
   file_received="yes" # let's say for now that a file has been downloaded and change it below if no addressbook has been exported.
   # check for addressbook and whether no file was received (for curl < 7.42.0) or file received has size of 0 (meaning empty file):
-  if [[ ${item} == "addressbook" && ! -s "${backupfolder_day}/${filename}" ]]; then
+  if [[ ${item} == "addressbook" && ! -s ${backupfolder_day}/${filename} ]]; then
     # touch file to create empty file, if it was not created by curl on successful download of empty addressbook (which is the case for curl < 7.42.0)
     # (this is also the case, if empty addressbook was fetched from database):
     touch "${backupfolder_day}/${filename}"
