@@ -1,5 +1,6 @@
 vX.X.X (XX.XX.XXXX)
 - improved: minor code optimizations
+- improved: use bash builtins to check for empty backup directory
 
 v1.2.0 (20.02.2020)
 - improved: minor modifications in README.md and README_GER.md

@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-2 (23.02.2020), AGPL-3.0"
+version="1.2.0-3 (23.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -1926,10 +1926,11 @@ get_addressbooks() {
 
 check_for_backup_files() {
   # checks for files in backup-directory and prints warning, if there are no files (meaning absolutely nothing has been created/downloaded).
-  local backupfolder_content
+  local -a backupfolder_content
 
-  backupfolder_content="$(ls -A "${backupfolder_day}")"
-  if [[ -z ${backupfolder_content} ]]; then
+  # read contents of backup-directory in array and test, if first element is a file:
+  backupfolder_content=("${backupfolder_day}"/*)
+  if [[ ! -f ${backupfolder_content[0]} ]]; then
     printf '%s\n' "-- WARNING: No files in backup directory - meaning no backup created !!" >&2
     backup_files_present="no"
     rm -r "${backupfolder_day}"  # remove empty backup folder
