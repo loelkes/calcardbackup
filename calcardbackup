@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-5 (26.02.2020), AGPL-3.0"
+version="1.2.0-6 (26.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -875,8 +875,8 @@ get_database_details() {
       if [[ ${dbhost} =~ ^.+:/.+$ ]]; then
         # dbhost contains socket after hostname (e.g. 'localhost:/var/run/mysqld/mysqld.sock'):
         [[ ${dbtype} == "mysql" ]] && {
-          dbprotocol="socket = ${dbhost#*:}"
-          dbhost="${dbhost%%:*}"
+          dbprotocol="--socket=${dbhost#*:}"
+          dbhost="--host=${dbhost%%:*}"
         }
         [[ ${dbtype} == "pgsql" ]] && {
           # for postgresql just use socket as hostname:
@@ -885,18 +885,11 @@ get_database_details() {
         }
       elif [[ ${dbhost} =~ ^.+:[[:digit:]]+$ ]]; then
         # dbhost contains portnumber after hostname (e.g. '127.0.0.1:3306'):
-        [[ ${dbtype} == "mysql" ]] && {
-          # split up $dbhost into port and host for MySQL/MariaDB:
-          dbprotocol="port = ${dbhost#*:}"
-          dbhost="${dbhost%%:*}"
-        }
-        [[ ${dbtype} == "pgsql" ]] && {
-          # split up $dbhost into port and host for PostgreSQL:
-          dbprotocol="--port=${dbhost#*:}"
-          dbhost="--host=${dbhost%%:*}"
-        }
+        # split up $dbhost into port and host:
+        dbprotocol="--port=${dbhost#*:}"
+        dbhost="--host=${dbhost%%:*}"
       else
-        # dbhost contains only hostname - use empty value to tell mysql to use default value:
+        # dbhost contains only hostname - use empty value as dbprotocol to tell MySQL/PostgreSQL to use the default:
         # shellcheck disable=SC2034
         dbprotocol=""
         # make sure to also pass --host assignment to psql, if dbhost contains neither socket nor port:
@@ -916,20 +909,17 @@ get_database_details() {
           # ( no need to check for nextcloud-snaps included cli-utility 'nextcloud.mysql-client', because already checked in function preparations() ):
           command -v mysql > /dev/null || error_exit "ERROR: ${productname} database is MySQL/MariaDB. Therefore this script requires package 'mysql-client' or 'mariadb-client'." "Install according package and run script again"
         fi
+        # set command for mysql client depending on regular or snap installation:
+        mysql_client_program="mysql"
+        # shellcheck disable=SC2034
+        [[ ${snap} == "yes" ]] && mysql_client_program="nextcloud.mysql-client"
+
         # set database command for MySQL:
         # mysql>=5.6 throws a warning when using password on command line interface: https://bugs.mysql.com/bug.php?id=66546
         # avoiding that with option --defaults-extra-file and printf as suggested by Dave James Miller: https://stackoverflow.com/questions/20751352/suppress-warning-messages-using-mysql-from-within-terminal-but-password-written/20854048#comment42372603_22933056
         # ATTENTION: variable $dbcommand will be passed to command "eval" later. So better take care when adding new stuff to $dbcommand!
-        case ${snap} in
-          no )
-            # shellcheck disable=SC2016
-            dbcommand='mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -ssre '
-          ;;
-          yes )
-            # shellcheck disable=SC2016
-            dbcommand='nextcloud.mysql-client --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -ssre '
-          ;;
-        esac
+        # shellcheck disable=SC2016
+        dbcommand='${mysql_client_program} --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost#*=}" "${dbprotocol#*=}") "${dbname}" -ssre '
         # store type of database for output of script:
         database="MySQL/MariaDB"
       }
