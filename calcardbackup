@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-4 (25.02.2020), AGPL-3.0"
+version="1.2.0-5 (26.02.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -865,6 +865,7 @@ get_database_details() {
   case ${dbtype} in
 
     mysql|pgsql)
+      # shellcheck disable=SC2034
       dbname="$(getvalue_from_configphp "dbname")"
       dbhost="$(getvalue_from_configphp "dbhost")"
       # use localhost as dbhost if unset in config.php
@@ -896,13 +897,16 @@ get_database_details() {
         }
       else
         # dbhost contains only hostname - use empty value to tell mysql to use default value:
+        # shellcheck disable=SC2034
         dbprotocol=""
         # make sure to also pass --host assignment to psql, if dbhost contains neither socket nor port:
         [[ ${dbtype} == "pgsql" ]] && dbhost="--host=${dbhost}"
       fi
 
       # retrieve username and password for database access from config.php:
+      # shellcheck disable=SC2034
       dbuser="$(getvalue_from_configphp "dbuser")"
+      # shellcheck disable=SC2034
       dbpassword="$(getvalue_from_configphp "dbpassword")"
 
       # create command $dbcommand for database queries depending on database found in config.php:
@@ -919,11 +923,11 @@ get_database_details() {
         case ${snap} in
           no )
             # shellcheck disable=SC2016
-            dbcommand='mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sre '
+            dbcommand='mysql --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -ssre '
           ;;
           yes )
             # shellcheck disable=SC2016
-            dbcommand='nextcloud.mysql-client --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sre '
+            dbcommand='nextcloud.mysql-client --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -ssre '
           ;;
         esac
         # store type of database for output of script:
@@ -1009,21 +1013,18 @@ create_backup_subfolder() {
 check_table_function() {
   # checks if a certain table exists
   # ${1} is table to check for
+  # ${2} is column which will be queried (just an existing column from the table to be checked, usually 'id')
 
-  local result
+  local result db_query
 
-  # for checking tables with MySQL: option -r is not needed but an additional option -s is used to produce less output:
-  [[ ${dbtype} == "mysql" && ${snap} == "no" ]] && result="$(mysql --defaults-extra-file=<(printf '[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s' "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sse "SHOW TABLES LIKE '${1}';")"
-  [[ ${dbtype} == "mysql" && ${snap} == "yes" ]] && result="$(nextcloud.mysql-client --defaults-extra-file=<(printf '[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s' "${dbuser}" "${dbpassword}" "${dbhost}" "${dbprotocol}") "${dbname}" -sse "SHOW TABLES LIKE '${1}';")"
-  [[ ${dbtype} == "sqlite3" ]] && result="$(sqlite3 "${sqlite3_database}" "SELECT name FROM sqlite_master WHERE type='table' AND name='${1}';")"
-  # this check is a bit more complicated for PostgreSQL:
-  if [[ ${dbtype} == "pgsql" ]]; then
-    # first let us assume that the desired table exists (variable needs to be set for check later):
-    result="table ${1} exists"
-    # then querie for the first line in that table, suppress any output and set ${result} to empty string, if psql throws an error:
-    PGPASSWORD="${dbpassword}" psql ${dbhost} ${dbprotocol} -U "${dbuser}" -d "${dbname}" -Aqtc "SELECT * FROM ${1} LIMIT 1;" 1>/dev/null 2>&1 || result=""
-  fi
-
+  # Let's assume the table is existing in the database:
+  result="table exists"
+  # prepare database query: ask for first element from column in table (mind that this will be passed to `eval` afterwards!):
+  # shellcheck disable=SC2016
+  db_query='"SELECT ${2} FROM ${1} LIMIT 1;"'
+  # run query successfully or (in case of an error) adjust variable (that is the case, if table is not existing):
+  eval "${dbcommand}" "${db_query}" >/dev/null 2>&1 || result="table does not exist"
+  # return result:
   printf '%s' "${result}"
 }
 
@@ -1039,10 +1040,10 @@ query_database() {
 
   _output printf '%s\n' "+  Looking for ${item}s in your ${productname}:"
 
-  # check, if table exists (fills variable ${check_table} if table does exist):
-  check_table="$(check_table_function "${table}")"
+  # check, if table exists:
+  check_table="$(check_table_function "${table}" "id")"
 
-  if [[ ${check_table:-} == "" ]]; then
+  if [[ ${check_table:-} == "table does not exist" ]]; then
     if [[ ${item} != "calendarsubscription" ]]; then
       # print notice, if table doesn't exist (unnecessary for calendarsubscriptions):
       _output printf '%s\n' "-- NOTICE: table '${table}' containing ${item}s does not exist in database."
@@ -1123,10 +1124,10 @@ include_shares() {
   if [[ -z ${read_shared:-} ]]; then
     read_shared="yes"
 
-    # check, if table exists (fills variable ${check_table} if table does exist):
-    check_table="$(check_table_function "${table_shares}")"
+    # check, if table exists:
+    check_table="$(check_table_function "${table_shares}" "id")"
 
-    if [[ ${check_table:-} == "" ]]; then
+    if [[ ${check_table:-} == "table does not exist" ]]; then
       # print notice, if $table_shares doesn't exist:
       _output printf '%s\n' "-- NOTICE: table '${table_shares}' containing shared calendars/addressbooks does not exist in database."
       _output printf '%s\n' "-- NOTICE: Looks like there are no shared calenders/addressbooks in your ${productname}."
@@ -1165,10 +1166,10 @@ include_shares() {
       done < <(eval "${dbcommand}" "${db_query}")
 
       # we also need to get info about group members to be able to backup calendars/addressbooks which are shared to groups:
-      # check, if table exists (fills variable ${check_table} if table does exist):
-      check_table="$(check_table_function "${table_group_user}")"
+      # check, if table exists:
+      check_table="$(check_table_function "${table_group_user}" "gid")"
 
-      if [[ ${check_table:-} != "" ]]; then
+      if [[ ${check_table:-} != "table does not exist" ]]; then
         # table group_user exists -> read values in array grouplist:
         # fields to be read from table group_user:
         fields="gid, uid"
