@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-6 (26.02.2020), AGPL-3.0"
+version="1.2.0-7 (04.03.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -254,10 +254,8 @@ preparations() {
   # check, if grep is installed on this machine (grep is not a requirement, but speeds up the check, if addressbooks conatin any vCard 2.1)
   # assume grep is installed and change to no, if it is not installed:
   grep_installed="yes"
-  command -v grep > /dev/null || grep_installed="no"
-  # make sure that grep is accessible (might not be in shared hosting environments):
-  grep -V > /dev/null 2>&1 || grep_installed="no"
-
+  grep -c calcardbackup "${BASH_SOURCE[0]}" > /dev/null 2>&1 || grep_installed="no"
+echo $grep_installed
   # if $users_file is unset or empty and we fetch everything from database - do a complete backup:
   if [[ -z ${users_file:-} ]]; then
     if [[ ${fetch_from_database} == "yes" ]]; then
@@ -309,7 +307,7 @@ preparations() {
   [[ -w ${backupfolder} ]] || error_exit "ERROR: can't write files into '${backupfolder}'." "I need to be able to have the according permissions for the directory (+wx). Check given path!"
 
   # make sure the configured date format in $date_extension is valid:
-  if ! date +"${date_extension}" 1>/dev/null 2>&1; then
+  if ! date +"${date_extension}" >/dev/null 2>&1; then
     [[ -z ${config_file:-} ]] && _output printf '%s\n' "-- NOTICE: Argument to option '-d|--date' has no valid format (check 'man date' for valid formats)."
     [[ -n ${config_file:-} ]] && _output printf '%s\n' "-- NOTICE: Parameter 'date_extension' has no valid format (check 'man date' for valid formats)."
     _output printf '%s\n' "-- NOTICE: Using default value instead: \"-%Y-%m-%d\""
