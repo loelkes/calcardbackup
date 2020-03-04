@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-7 (04.03.2020), AGPL-3.0"
+version="1.2.0-8 (04.03.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -255,7 +255,7 @@ preparations() {
   # assume grep is installed and change to no, if it is not installed:
   grep_installed="yes"
   grep -c calcardbackup "${BASH_SOURCE[0]}" > /dev/null 2>&1 || grep_installed="no"
-echo $grep_installed
+
   # if $users_file is unset or empty and we fetch everything from database - do a complete backup:
   if [[ -z ${users_file:-} ]]; then
     if [[ ${fetch_from_database} == "yes" ]]; then
@@ -376,6 +376,18 @@ echo $grep_installed
     # if $compression_method is set to something else than "zip" or "tar.gz" - use "tar.gz":
     _output printf '%s\n' "-- NOTICE: Parameter 'compression_method' is set to unsupported format. Using default value 'tar.gz'."
     compression_method="tar.gz"
+  fi
+  if [[ ${compression_method} == "tar.gz" && ${compress} == "yes" ]]; then
+    # make sure 'tar' is available:
+    if ! tar -czf /dev/null "${BASH_SOURCE[0]}" > /dev/null 2>&1; then
+      _output printf '%s\n' "-- WARNING: package 'tar' is not available!"
+      _output printf '%s\n' "-- WARNING: Changing to uncompressed backup."
+      compress="no"
+      if [[ ${encrypt_backup} == "yes" ]]; then
+        [[ -z ${config_file:-} ]] && error_exit "ERROR: Can‘t encrypt uncompressed backup!" "Run script again without using option -e"
+        [[ -n ${config_file:-} ]] && error_exit "ERROR: Can‘t encrypt uncompressed backup!" "Use 'encrypt_backup=\"no\"' in configuration file and run sript again."
+      fi
+    fi
   fi
 
   # check $snap for valid value (could only be invalid when using config-file):
