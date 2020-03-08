@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-8 (04.03.2020), AGPL-3.0"
+version="1.2.0-9 (08.03.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -226,7 +226,7 @@ preparations() {
   fi
 
   # check for package curl
-  command -v curl > /dev/null || curl_installed="no"
+  curl --version > /dev/null 2>&1 || curl_installed="no"
   if [[ ${curl_installed:-} == "no" ]]; then
     # cURL is required to get calendars/addressbooks via http(s) --> error and exit, if fetch_from_database="no":
     if [[ ${fetch_from_database} == "no" ]]; then
@@ -344,8 +344,8 @@ preparations() {
     encrypt_backup="no"
   elif [[ ${encrypt_backup:-} == "yes" ]]; then
     # check for package gpg (if installed, prefer gpg2 over gpg)::
-    command -v gpg > /dev/null && gpgcommand="gpg"
-    command -v gpg2 > /dev/null && gpgcommand="gpg2"
+    gpg --version > /dev/null 2>&1 && gpgcommand="gpg"
+    gpg2 --version > /dev/null 2>&1 && gpgcommand="gpg2"
     [[ -z ${gpgcommand:-} ]] && error_exit "ERROR: You chose to encrypt your backup." "Therefore package 'gnupg' is needed. Install with 'apt-get install gnupg' and run script again"
     if [[ ${compress:-} == "no" ]]; then
       _output printf '%s\n' "-- WARNING: Can't encrypt uncompressed backup."
@@ -371,7 +371,7 @@ preparations() {
   # there from compress="no" to compress="yes"):
   if [[ ${compression_method:-} == "zip" && ${compress} == "yes" ]]; then
     # check for package zip:
-    command -v zip > /dev/null || error_exit "ERROR: You chose to compress backed up files with 'zip' instead of 'tar.gz'." "Therefore package 'zip' is needed. Install with 'apt-get install zip' and run script again"
+    zip --version > /dev/null || error_exit "ERROR: You chose to compress backed up files with 'zip' instead of 'tar.gz'." "Therefore package 'zip' is needed. Install with 'apt-get install zip' and run script again"
   elif [[ ${compression_method:-} != "tar.gz" && ${compress} == "yes" ]]; then
     # if $compression_method is set to something else than "zip" or "tar.gz" - use "tar.gz":
     _output printf '%s\n' "-- NOTICE: Parameter 'compression_method' is set to unsupported format. Using default value 'tar.gz'."
@@ -379,7 +379,7 @@ preparations() {
   fi
   if [[ ${compression_method} == "tar.gz" && ${compress} == "yes" ]]; then
     # make sure 'tar' is available:
-    if ! tar -czf /dev/null "${BASH_SOURCE[0]}" > /dev/null 2>&1; then
+    if ! tar -czf /dev/null "${BASH_SOURCE[0]}"; then
       _output printf '%s\n' "-- WARNING: package 'tar' is not available!"
       _output printf '%s\n' "-- WARNING: Changing to uncompressed backup."
       compress="no"
@@ -398,7 +398,7 @@ preparations() {
   fi
   # make sure nextcloud.mysql-client is available when configured to use nextcloud-snap:
   if [[ ${snap} == "yes" ]]; then
-    command -v nextcloud.mysql-client > /dev/null || error_exit "ERROR: nextcloud-snaps cli-utility 'nextcloud.mysql-client' not found!" "To work with nextcloud-snap this script needs to be invoked  with sudo (even when root)." "If the script has been invoked with sudo: are you sure you are using nextcloud-snap?"
+    nextcloud.mysql-client --version > /dev/null || error_exit "ERROR: nextcloud-snaps cli-utility 'nextcloud.mysql-client' not found!" "To work with nextcloud-snap this script needs to be invoked  with sudo (even when root)." "If the script has been invoked with sudo: are you sure you are using nextcloud-snap?"
   fi
 
   # check $one_file_per_component for valid value (could only be invalid when using config-file):
@@ -917,7 +917,7 @@ get_database_details() {
         if [[ ${snap} == "no" ]]; then
           # check if mysql|mariadb command line client is installed
           # ( no need to check for nextcloud-snaps included cli-utility 'nextcloud.mysql-client', because already checked in function preparations() ):
-          command -v mysql > /dev/null || error_exit "ERROR: ${productname} database is MySQL/MariaDB. Therefore this script requires package 'mysql-client' or 'mariadb-client'." "Install according package and run script again"
+          mysql --version > /dev/null || error_exit "ERROR: ${productname} database is MySQL/MariaDB. Therefore this script requires package 'mysql-client' or 'mariadb-client'." "Install according package and run script again"
         fi
         # set command for mysql client depending on regular or snap installation:
         mysql_client_program="mysql"
@@ -935,7 +935,7 @@ get_database_details() {
       }
       [[ ${dbtype} == "pgsql" ]] && {
         # check if postgresql command line client is installed:
-        command -v psql > /dev/null || error_exit "ERROR: ${productname} database is PostgreSQL. Therefore this script requires package 'postgresql-client'." "Install with 'apt-get install postgresql-client' and run script again"
+        psql --version > /dev/null || error_exit "ERROR: ${productname} database is PostgreSQL. Therefore this script requires package 'postgresql-client'." "Install with 'apt-get install postgresql-client' and run script again"
         # set database command for PostgreSQL:
         # ATTENTION: variable $dbcommand will be passed to command "eval" later. So better take care when adding new stuff to $dbcommand!
         # actually no need to quote $dbhost and $dbprotocol here, because they can't contain spaces. Saves some lines of code (v0.7.2-22), but
@@ -952,7 +952,7 @@ get_database_details() {
 
     sqlite3)
       # check if command-line-interface of sqlite3 is installed:
-      command -v sqlite3 > /dev/null || error_exit "ERROR: ${productname} database is sqlite3. Therefore this script requires package 'sqlite3'." "Install with 'apt-get install sqlite3' and run script again"
+      sqlite3 --version > /dev/null || error_exit "ERROR: ${productname} database is sqlite3. Therefore this script requires package 'sqlite3'." "Install with 'apt-get install sqlite3' and run script again"
       datadirectory="$(getvalue_from_configphp "datadirectory")" # has to be absolute path for working Own-/Nextcloud, so no need to get absolute path
       [[ ${datadirectory} == "value is unset" ]] && datadirectory="${nextcloud_path}/data" # use default if unset in config.php
       sqlite3_database="${datadirectory}/owncloud.db"
