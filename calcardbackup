@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-9 (08.03.2020), AGPL-3.0"
+version="1.2.0-10 (09.03.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -902,8 +902,8 @@ get_database_details() {
         # dbhost contains only hostname - use empty value as dbprotocol to tell MySQL/PostgreSQL to use the default:
         # shellcheck disable=SC2034
         dbprotocol=""
-        # make sure to also pass --host assignment to psql, if dbhost contains neither socket nor port:
-        [[ ${dbtype} == "pgsql" ]] && dbhost="--host=${dbhost}"
+        # make sure to also pass --host assignment to mysql/psql, if dbhost contains neither socket nor port:
+        dbhost="--host=${dbhost}"
       fi
 
       # retrieve username and password for database access from config.php:
@@ -929,7 +929,7 @@ get_database_details() {
         # avoiding that with option --defaults-extra-file and printf as suggested by Dave James Miller: https://stackoverflow.com/questions/20751352/suppress-warning-messages-using-mysql-from-within-terminal-but-password-written/20854048#comment42372603_22933056
         # ATTENTION: variable $dbcommand will be passed to command "eval" later. So better take care when adding new stuff to $dbcommand!
         # shellcheck disable=SC2016
-        dbcommand='${mysql_client_program} --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"\nhost = %s\n%s" "${dbuser}" "${dbpassword}" "${dbhost#*=}" "${dbprotocol#*=}") "${dbname}" -ssre '
+        dbcommand='${mysql_client_program} --defaults-extra-file=<(printf "[client]\nuser = %s\npassword = \"%s\"" "${dbuser}" "${dbpassword}") ${dbhost} ${dbprotocol} "${dbname}" -ssre '
         # store type of database for output of script:
         database="MySQL/MariaDB"
       }
@@ -944,7 +944,7 @@ get_database_details() {
         # 'psql: FATAL: Peer authentication failed for user "USERNAME"'
         # see https://stackoverflow.com/a/26183931 and https://stackoverflow.com/a/21889759 to solve this error message.
         # shellcheck disable=SC2016
-        dbcommand='PGPASSWORD="${dbpassword}" psql "${dbhost}" "${dbprotocol}" -U "${dbuser}" -d "${dbname}" -Aqtc '
+        dbcommand='PGPASSWORD="${dbpassword}" psql ${dbhost} ${dbprotocol} -U "${dbuser}" -d "${dbname}" -Aqtc '
         # store type of database for output of script:
         database="PostgreSQL"
       }
