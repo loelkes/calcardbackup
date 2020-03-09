@@ -4,6 +4,7 @@ vX.X.X (XX.XX.XXXX)
 - improved: simplify checks for existing tables
 - improved: unify code for MySQL and MySQL in a snap installation
 - improved: checks for packages are now failsafe
+- changed: calcardbackup now uses tar.gz, if zip is not available (instead of exiting)
 
 v1.2.0 (20.02.2020)
 - improved: minor modifications in README.md and README_GER.md

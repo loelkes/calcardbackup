@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.2.0-10 (09.03.2020), AGPL-3.0"
+version="1.2.0-11 (09.03.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -371,7 +371,10 @@ preparations() {
   # there from compress="no" to compress="yes"):
   if [[ ${compression_method:-} == "zip" && ${compress} == "yes" ]]; then
     # check for package zip:
-    zip --version > /dev/null || error_exit "ERROR: You chose to compress backed up files with 'zip' instead of 'tar.gz'." "Therefore package 'zip' is needed. Install with 'apt-get install zip' and run script again"
+    if ! zip --version > /dev/null; then
+      _output printf '%s\n' "-- NOTICE: package 'zip' is not available. Using 'tar.gz' as compression method."
+      compression_method="tar.gz"
+    fi
   elif [[ ${compression_method:-} != "tar.gz" && ${compress} == "yes" ]]; then
     # if $compression_method is set to something else than "zip" or "tar.gz" - use "tar.gz":
     _output printf '%s\n' "-- NOTICE: Parameter 'compression_method' is set to unsupported format. Using default value 'tar.gz'."
@@ -380,8 +383,7 @@ preparations() {
   if [[ ${compression_method} == "tar.gz" && ${compress} == "yes" ]]; then
     # make sure 'tar' is available:
     if ! tar -czf /dev/null "${BASH_SOURCE[0]}"; then
-      _output printf '%s\n' "-- WARNING: package 'tar' is not available!"
-      _output printf '%s\n' "-- WARNING: Changing to uncompressed backup."
+      _output printf '%s\n' "-- WARNING: package 'tar' is not available!" "-- WARNING: Changing to uncompressed backup."
       compress="no"
       if [[ ${encrypt_backup} == "yes" ]]; then
         [[ -z ${config_file:-} ]] && error_exit "ERROR: Can‘t encrypt uncompressed backup!" "Run script again without using option -e"
