@@ -13,9 +13,9 @@ This Bash script exports calendars and addressbooks from ownCloud/Nextcloud to .
 - [Nextcloud-Snap Users](#nextcloud-snap-users)
 - [Synology Users](#synology-users)
 - [Considerations about Encryption](#considerations-about-encryption)
-- [Does this also work with a broken ownCloud/Nextcloud instance?](#does-this-also-work-with-a-broken-owncloudnextcloud-instance)
+- [Does this also work with a broken ownCloud/Nextcloud instance?](#does-this-also-work-with-a-broken-owncloud-nextcloud-instance)
 - [Links](#links)
-- [About Deprecated Option -g|--get-via-http](#about-deprecated-option--g----get-via-http)
+- [About Deprecated Option -g|--get-via-http](#about-deprecated-option-g-get-via-http)
 
 ## Requirements
 

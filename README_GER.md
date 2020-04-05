@@ -13,9 +13,9 @@ Dieses Bash-Skript exportiert Kalender und Adressbücher aus ownCloud/Nextcloud 
 - [Nextcloud-Snap Benutzer](#nextcloud-snap-benutzer)
 - [Synology Benutzer](#synology-benutzer)
 - [Erwähnenswertes zur Verschlüsselungsoption](#erwähnenswertes-zur-verschlüsselungsoption)
-- [Funktioniert das auch mit einer nicht funktionierenden ownCloud/Nextcloud Installation?](#funktioniert-das-auch-mit-einer-nicht-funktionierenden-owncloudnextcloud-installation)
+- [Funktioniert das auch mit einer nicht funktionierenden ownCloud/Nextcloud Installation?](#funktioniert-das-auch-mit-einer-nicht-funktionierenden-owncloud-nextcloud-installation)
 - [Links](#links)
-- [Über die veraltete Option -g|--get-via-http](#über-die-veraltete-option--g----get-via-http)
+- [Über die veraltete Option -g|--get-via-http](#über-die-veraltete-option-g-get-via-http)
 
 ## Voraussetzungen
 
