@@ -1,4 +1,4 @@
-vX.X.X (XX.XX.XXXX)
+v1.3.0 (05.04.2020)
 - improved: minor code optimizations
 - improved: use bash builtins to check for empty backup directory
 - improved: simplify checks for existing tables
