@@ -89,6 +89,7 @@ Usage: ./calcardbackup [DIRECTORY] [option [argument]] [option [argument]] [opti
 
 Arguments in capital letters to options are mandatory.
 Paths (FILE / DIRECTORY) are absolute paths or relative paths to working directory.
+If a path begins with a tilde-slash combinantion ~/, the tilde is replaced with ${HOME}
 
 -a | --address URL
        Pass URL of ownCloud Installation to script.

@@ -1,5 +1,6 @@
 vX.X.X (XX.XX.XXXX)
 - improved: use --defaults-file instead of --defaults-extra-file for mysql (#27)
+- improved: replace tilde at beginning of given paths with ${HOME}
 - fixed: some links were broken in content directory of both README files
 - fixed: catch error, if connection to database can't be established
 

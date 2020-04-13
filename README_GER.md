@@ -88,6 +88,7 @@ Aufruf: ./calcardbackup [VERZEICHNIS] [Option [Argument]] [Option [Argument]] [O
 
 Argumente in Großbuchstaben sind für die jeweiligen Optionen notwendig.
 Pfade (DATEI / VERZEICHNIS) sind absolute Pfade oder relative Pfade zum Arbeitsverzeichnis.
+Falls ein Pfad mit einer Tilde-Slash Kombination ~/ beginnt, wird die Tilde durch ${HOME} ersetzt.
 
 -a | --address URL
        übergibt die URL der ownCloud Installation an das Skript.
