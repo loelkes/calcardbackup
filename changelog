@@ -1,4 +1,4 @@
-vX.X.X (XX.XX.XXXX)
+v1.4.0 (13.04.2020)
 - improved: use --defaults-file instead of --defaults-extra-file for mysql (#27)
 - improved: set default-character-set for MySQL/MariaDB
 - improved: replace tilde at beginning of given paths with ${HOME}
