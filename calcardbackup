@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.3.0-1 (13.04.2020), AGPL-3.0"
+version="1.3.0-2 (13.04.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -1016,18 +1016,39 @@ check_table_function() {
   # checks if a certain table exists
   # ${1} is table to check for
   # ${2} is column which will be queried (just an existing column from the table to be checked, usually 'id')
+  # ${3} is verbal description of queried items for messages (calendar, calendarsubscription, addressbook, shared item)
 
-  local result db_query
+  local db_query no_notice_regex
 
-  # Let's assume the table is existing in the database:
-  result="table exists"
   # prepare database query: ask for first element from column in table (mind that this will be passed to `eval` afterwards!):
   # shellcheck disable=SC2016
   db_query='"SELECT ${2} FROM ${1} LIMIT 1;"'
-  # run query successfully or (in case of an error) adjust variable (that is the case, if table is not existing):
-  eval "${dbcommand}" "${db_query}" >/dev/null 2>&1 || result="table does not exist"
-  # return result:
-  printf '%s' "${result}"
+  # run query and store result (including errors) in variable to be able to check for result and error:
+  check_table="$(eval "${dbcommand}" "${db_query}" 2>&1 || : )"
+
+  # check error message to determine whether the error is unresolvable
+  # (also non existing table or field results in an error, which is actually not an error for our use case):
+  if [[ ${check_table} =~ (ERROR|Error|FATAL) ]]; then
+
+    # regex to determine for which items no notice shall be printed (unneeded for calendarsubscriptions and shared items):
+    no_notice_regex="^(calendarsubscription|shared item)$"
+    if [[ ${check_table} =~ ^.*${1}.*$ ]]; then
+      # error message contains tablename, meaning table has not yet been created:
+      # print according notice, that table doesn't exist:
+      [[ ${3} =~ ${no_notice_regex} ]] || _output printf '%s\n' "-- NOTICE: table '${1}' containing ${3}s does not exist in database."
+    elif [[ ${check_table} =~ ^.*${2}.*$ ]]; then
+      # error message contains fieldname, meaning table has been created, but contains no items:
+      # print according notice, if table exists, but is empty:
+      [[ ${3} =~ ${no_notice_regex} ]] || _output printf '%s\n' "-- NOTICE: table '${1}' containing ${3}s is empty."
+    else
+      # if error message contains neither tablename nor fieldname, there is a more serious problem - exit the script with error message:
+      printf '%s\n' "${check_table}" >&2
+      error_exit "Database connection could not be established!"
+    fi
+  else
+    # if database returned a result without error, that means that at least one item is in the database:
+    check_table="items_found"
+  fi
 }
 
 query_database() {
@@ -1043,16 +1064,9 @@ query_database() {
   _output printf '%s\n' "+  Looking for ${item}s in your ${productname}:"
 
   # check, if table exists:
-  check_table="$(check_table_function "${table}" "id")"
+  check_table_function "${table}" "id" "${item}"
 
-  if [[ ${check_table:-} == "table does not exist" ]]; then
-    if [[ ${item} != "calendarsubscription" ]]; then
-      # print notice, if table doesn't exist (unnecessary for calendarsubscriptions):
-      _output printf '%s\n' "-- NOTICE: table '${table}' containing ${item}s does not exist in database."
-      _output printf '%s\n' "-- NOTICE: Looks like your ${productname} did not create any ${item}s yet."
-    fi
-
-  else
+  if [[ ${check_table:-} == "items_found" ]]; then
     # table exists
 
     # prepare database query:
@@ -1127,15 +1141,10 @@ include_shares() {
     read_shared="yes"
 
     # check, if table exists:
-    check_table="$(check_table_function "${table_shares}" "id")"
+    check_table_function "${table_shares}" "id" "shared item"
 
-    if [[ ${check_table:-} == "table does not exist" ]]; then
-      # print notice, if $table_shares doesn't exist:
-      _output printf '%s\n' "-- NOTICE: table '${table_shares}' containing shared calendars/addressbooks does not exist in database."
-      _output printf '%s\n' "-- NOTICE: Looks like there are no shared calenders/addressbooks in your ${productname}."
-
-    else
-      # table with info about shares ($table_shares) exists - read required fields from table and assign values to share_arrays
+    if [[ ${check_table:-} == "items_found" ]]; then
+      # table with info about shares ($table_shares) contains data - read required fields from table and assign values to share_arrays
 
       # prepare database query
       # fields to be read from database table with shares:
@@ -1169,10 +1178,10 @@ include_shares() {
 
       # we also need to get info about group members to be able to backup calendars/addressbooks which are shared to groups:
       # check, if table exists:
-      check_table="$(check_table_function "${table_group_user}" "gid")"
+      check_table_function "${table_group_user}" "gid" "groupshare"
 
-      if [[ ${check_table:-} != "table does not exist" ]]; then
-        # table group_user exists -> read values in array grouplist:
+      if [[ ${check_table:-} == "items_found" ]]; then
+        # table group_user exists and is not empty -> read values in array grouplist:
         # fields to be read from table group_user:
         fields="gid, uid"
         # adjust output format of MySQL/MariaDB/PostgreSQL to match output of SQLite3 (field|field|field):

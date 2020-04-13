@@ -1,6 +1,7 @@
 vX.X.X (XX.XX.XXXX)
 - improved: use --defaults-file instead of --defaults-extra-file for mysql (#27)
 - fixed: some links were broken in content directory of both README files
+- fixed: catch error, if connection to database can't be established
 
 v1.3.0 (05.04.2020)
 - improved: minor code optimizations
