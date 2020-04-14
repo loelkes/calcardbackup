@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.4.0 (13.04.2020), AGPL-3.0"
+version="1.4.0-1 (14.04.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -958,14 +958,13 @@ get_database_details() {
       # shellcheck disable=SC2034
       dbpassword="$(getvalue_from_configphp "dbpassword")"
 
-      # set default character set of MySQL/MariaDB-database:
-      if [[ ${dbtype} == "mysql" ]]; then
-      # shellcheck disable=SC2034
-        [[ $(getvalue_from_configphp "mysql.utf8mb4") == "true" ]] && default_character_set="utf8mb4"
-      fi
-
       # create command $dbcommand for database queries depending on database found in config.php:
       [[ ${dbtype} == "mysql" ]] && {
+
+        # set default character set of MySQL/MariaDB-database:
+        # shellcheck disable=SC2034
+        [[ $(getvalue_from_configphp "mysql.utf8mb4") == "true" ]] && default_character_set="utf8mb4"
+
         if [[ ${snap} == "no" ]]; then
           # check if mysql|mariadb command line client is installed
           # ( no need to check for nextcloud-snaps included cli-utility 'nextcloud.mysql-client', because already checked in function preparations() ):
