@@ -1,5 +1,6 @@
 vX.X.X (XX.XX.XXXX)
 - improved: minor code optimization for MySQL/MariaDB
+- fixed: use preconfigured values for mysql when using snap
 
 v1.4.0 (13.04.2020)
 - improved: use --defaults-file instead of --defaults-extra-file for mysql (#27)
