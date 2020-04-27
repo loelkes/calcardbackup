@@ -31,7 +31,7 @@
 set -euo pipefail
 
 # calcardbackup version and origin repository:
-version="1.4.0-1 (14.04.2020), AGPL-3.0"
+version="1.5.0 (27.04.2020), AGPL-3.0"
 origin_repository="https://codeberg.org/BernieO/calcardbackup"
 
 ###
@@ -974,7 +974,7 @@ get_database_details() {
         mysql_client_program="mysql"
         # shellcheck disable=SC2034
         if [[ ${snap} == "yes" ]]; then
-      	  mysql_client_program="nextcloud.mysql-client"
+          mysql_client_program="nextcloud.mysql-client"
           # if we're on snap, simply use its magic (no user, pw, host or protocol needed)
           dbcommand='${mysql_client_program} --default_character_set="${default_character_set:-auto}" "${dbname}" -ssre '
         else
