@@ -974,15 +974,19 @@ get_database_details() {
         # set command for mysql client depending on regular or snap installation:
         mysql_client_program="mysql"
         # shellcheck disable=SC2034
-        [[ ${snap} == "yes" ]] && mysql_client_program="nextcloud.mysql-client"
-
-        # set database command for MySQL:
-        # mysql>=5.6 throws a warning when using password on command line interface: https://bugs.mysql.com/bug.php?id=66546
-        # avoiding that with option --defaults-extra-file and printf as suggested by Dave James Miller: https://stackoverflow.com/questions/20751352/suppress-warning-messages-using-mysql-from-within-terminal-but-password-written/20854048#comment42372603_22933056
-        # --defaults-file seems to be a better option though than --defaults-extra-file (see issue #27: https://codeberg.org/BernieO/calcardbackup/issues/27#issuecomment-54525)
-        # ATTENTION: variable $dbcommand will be passed to command "eval" later. So better take care when adding new stuff to $dbcommand!
-        # shellcheck disable=SC2016
-        dbcommand='${mysql_client_program} --defaults-file=<(printf "%s\n" "[client]" "user = \"${dbuser}\"" "password = \"${dbpassword}\"" "default_character_set = \"${default_character_set:-auto}\"") ${dbhost} ${dbprotocol} "${dbname}" -ssre '
+        if [[ ${snap} == "yes" ]]; then
+      	  mysql_client_program="nextcloud.mysql-client"
+          # if we're on snap, simply use its magic (no user, pw, host or protocol needed)
+          dbcommand='${mysql_client_program} --default_character_set="${default_character_set:-auto}" "${dbname}" -ssre '
+        else
+          # set database command for MySQL:
+          # mysql>=5.6 throws a warning when using password on command line interface: https://bugs.mysql.com/bug.php?id=66546
+          # avoiding that with option --defaults-extra-file and printf as suggested by Dave James Miller: https://stackoverflow.com/questions/20751352/suppress-warning-messages-using-mysql-from-within-terminal-but-password-written/20854048#comment42372603_22933056
+          # --defaults-file seems to be a better option though than --defaults-extra-file (see issue #27: https://codeberg.org/BernieO/calcardbackup/issues/27#issuecomment-54525)
+          # ATTENTION: variable $dbcommand will be passed to command "eval" later. So better take care when adding new stuff to $dbcommand!
+          # shellcheck disable=SC2016
+          dbcommand='${mysql_client_program} --defaults-file=<(printf "%s\n" "[client]" "user = \"${dbuser}\"" "password = \"${dbpassword}\"" "default_character_set = \"${default_character_set:-auto}\"") ${dbhost} ${dbprotocol} "${dbname}" -ssre '
+        fi
         # store type of database for output of script:
         database="MySQL/MariaDB"
       }
